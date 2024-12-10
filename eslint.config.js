@@ -76,49 +76,6 @@ module.exports = {
     'max-nested-callbacks': ['warn', 3], // 要求回调函数最大嵌套深度3
     'max-statements-per-line': ['warn', { max: 1 }], // 要求每一行中所允许的最大语句数量
     quotes: ['off', 'single', 'avoid-escape'], // 要求统一使用单引号符号
-    'vue/require-default-prop': 0, // 关闭属性参数必须默认值
-    'vue/singleline-html-element-content-newline': 0, // 关闭单行元素必须换行符
-    'vue/multiline-html-element-content-newline': 0, // 关闭多行元素必须换行符
-    // 要求每一行标签的最大属性不超五个
-    'vue/max-attributes-per-line': [
-      'warn',
-      {
-        singleline: 8,
-        multiline: 8,
-      },
-    ],
-    // 要求html标签的缩进为需要2个空格
-    'vue/html-indent': [
-      'off',
-      2,
-      {
-        attribute: 1,
-        baseIndent: 1,
-        closeBracket: 0,
-        alignAttributesVertically: true,
-        ignores: [],
-      },
-    ],
-    // 取消关闭标签不能自闭合的限制设置
-    'vue/html-self-closing': [
-      'off',
-      {
-        html: {
-          void: 'always',
-          normal: 'never',
-          component: 'always',
-        },
-        svg: 'always',
-        math: 'always',
-      },
-    ],
-    'vue/multi-word-component-names': [
-      'off',
-      {
-        ignores: ['index', 'Breadcrumb', 'Language', 'Logo', 'Modal', 'Pagination'],
-      },
-    ],
-    'vue/no-dupe-keys': ['off'],
   },
   globals: {
     require: true,
