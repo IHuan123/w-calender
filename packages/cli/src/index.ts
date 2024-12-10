@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import fs from 'fs-extra';
 import path from 'path';
 import viteDocsDev from './scripts/dev-docs';
+import viteCalenderDev from './scripts/dev-calender';
 
 const program = new Command();
 
@@ -13,9 +14,16 @@ program.version(packageData.version).name('@ch-calender-cli').usage('command [op
 
 program
   .command('docs-server')
-  .description('document server')
+  .description('docs server')
   .action(async (args) => {
     viteDocsDev();
+  });
+
+program
+  .command('calender-server')
+  .description('lib server')
+  .action(async (args) => {
+    viteCalenderDev();
   });
 
 program.parse();

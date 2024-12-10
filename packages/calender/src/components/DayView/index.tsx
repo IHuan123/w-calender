@@ -1,5 +1,5 @@
 import './index.scss';
-import { cls } from '../utils/css';
+import { cls } from '../../utils/css';
 export default function DayView() {
   return (
     <div className={cls('day')}>

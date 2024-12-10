@@ -2,11 +2,34 @@
   "name": "ch-calender",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "main": "./dist/ch-calender.mjs",
+  "module": "./dist/ch-calender.mjs",
+  "types": "./index.d.ts",
+  "unpkg": "./dist/ch-calender.umd.js",
+  "exports": {
+    ".": {
+      "import": "./dist/ch-calender.mjs",
+      "browser": "./dist/ch-calender.umd.js",
+      "default": "./dist/ch-calender.mjs"
+    },
+    "./esm": "./dist/ch-calendar.mjs",
+    "./ch-calendar.css": "./dist/ch-calendar.css",
+    "./dist/*": "./dist/*"
   },
-  "keywords": [],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ch-calender-cli calender-server"
+  },
+  "keywords": [
+    "calender",
+    "ch-calender"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {

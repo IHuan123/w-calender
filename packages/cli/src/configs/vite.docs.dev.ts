@@ -1,4 +1,5 @@
-import { defineConfig, InlineConfig } from 'vite';
+import { defineConfig, InlineConfig, mergeConfig } from 'vite';
+import viteCalenderBase from './vite.calender.base';
 // import path from 'path';
 export default defineConfig({
   plugins: [],
@@ -8,13 +9,4 @@ export default defineConfig({
     open: true,
     hmr: true,
   },
-  css: {
-    // postcss: path.resolve(__dirname, '../../'),
-    preprocessorOptions: {
-      // 全局样式引入
-      scss: {
-        api: 'modern', // 或 "modern"，"legacy"
-      },
-    },
-  },
-}) as InlineConfig;
+});
