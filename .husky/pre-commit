@@ -1,1 +1,2 @@
-npm test
+#!/bin/sh
+pnpm run test
