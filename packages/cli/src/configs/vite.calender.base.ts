@@ -2,12 +2,8 @@ import { defineConfig, InlineConfig } from 'vite';
 import eslintPlugin from 'vite-plugin-eslint';
 import path from 'path';
 
-const CSS_PREFIX = 'w-calender';
 const root = process.cwd();
 export default defineConfig({
-  define: {
-    __CSS_PREFIX__: CSS_PREFIX,
-  },
   plugins: [
     eslintPlugin({
       include: ['src/**/*.ts', 'src/**/*.tsx', 'src/*.js', 'src/*.jsx'],
@@ -27,7 +23,7 @@ export default defineConfig({
       scss: {
         api: 'modern-compiler', // 或 "modern"，"legacy"
         importers: [],
-        additionalData: `@use "@/style/var.scss";$css-prefix: '${CSS_PREFIX}';`,
+        additionalData: `@use "@/style/variable.scss";`,
       },
     },
   },

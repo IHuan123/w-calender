@@ -1,6 +1,8 @@
 import { render } from 'preact';
 import { DayView } from './components';
+
 export interface ChCalenderOptions {}
+
 class ChCalender {
   el: HTMLElement;
   options: ChCalenderOptions;
@@ -10,7 +12,7 @@ class ChCalender {
     this.render();
   }
   render() {
-    render(DayView(), this.el);
+    render(DayView({}), this.el);
   }
 }
 

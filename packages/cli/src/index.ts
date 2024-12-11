@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import viteDocsDev from './scripts/dev-docs';
 import viteCalenderDev from './scripts/dev-calender';
+import viteCalenderBuild from './scripts/build-calender';
 
 const program = new Command();
 
@@ -24,6 +25,13 @@ program
   .description('lib server')
   .action(async (args) => {
     viteCalenderDev();
+  });
+
+program
+  .command('calender-build')
+  .description('lib build')
+  .action(async (args) => {
+    viteCalenderBuild();
   });
 
 program.parse();
