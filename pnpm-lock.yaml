@@ -115,7 +115,7 @@ importers:
 
   packages/docs:
     dependencies:
-      ch-calender:
+      w-calender:
         specifier: workspace:*
         version: link:../calender
 

@@ -1,10 +1,10 @@
 {
-  "name": "@ch-calender/cli",
+  "name": "@w-calender/cli",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",
   "bin": {
-    "ch-calender-cli": "./dist/index.js"
+    "w-calender-cli": "./dist/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

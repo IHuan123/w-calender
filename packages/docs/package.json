@@ -1,17 +1,17 @@
 {
-  "name": "@ch-calender/doc",
+  "name": "@w-calender/doc",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ch-calender-cli docs-server"
+    "dev": "w-calender-cli docs-server"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ch-calender": "workspace:*"
+    "w-calender": "workspace:*"
   }
 }

@@ -1,16 +1,16 @@
 {
-  "name": "ch-calender",
+  "name": "w-calender",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/ch-calender.mjs",
-  "module": "./dist/ch-calender.mjs",
+  "main": "./dist/w-calender.mjs",
+  "module": "./dist/w-calender.mjs",
   "types": "./index.d.ts",
-  "unpkg": "./dist/ch-calender.umd.js",
+  "unpkg": "./dist/w-calender.umd.js",
   "exports": {
     ".": {
-      "import": "./dist/ch-calender.mjs",
-      "browser": "./dist/ch-calender.umd.js",
-      "default": "./dist/ch-calender.mjs"
+      "import": "./dist/w-calender.mjs",
+      "browser": "./dist/w-calender.umd.js",
+      "default": "./dist/w-calender.mjs"
     },
     "./esm": "./dist/ch-calendar.mjs",
     "./ch-calendar.css": "./dist/ch-calendar.css",
@@ -24,11 +24,11 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ch-calender-cli calender-server"
+    "dev": "w-calender-cli calender-server"
   },
   "keywords": [
     "calender",
-    "ch-calender"
+    "w-calender"
   ],
   "author": "",
   "license": "ISC",
