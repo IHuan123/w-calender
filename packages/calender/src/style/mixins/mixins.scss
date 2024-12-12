@@ -1,4 +1,4 @@
-@use './global.scss';
+@use '../global.scss';
 @mixin cls($className) {
   @if $className != '' {
   }

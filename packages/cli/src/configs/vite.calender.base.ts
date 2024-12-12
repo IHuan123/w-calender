@@ -23,7 +23,7 @@ export default defineConfig({
       scss: {
         api: 'modern-compiler', // 或 "modern"，"legacy"
         importers: [],
-        additionalData: `@use "@/style/variable.scss";`,
+        additionalData: `@use "@/style/variable.scss" as *;`,
       },
     },
   },

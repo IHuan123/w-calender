@@ -1,6 +1,8 @@
 import { render } from 'preact';
 import { DayView } from './components';
 
+export { DayView };
+
 export interface ChCalenderOptions {}
 
 class ChCalender {

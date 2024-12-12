@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/w-calender.mjs",
   "module": "./dist/w-calender.mjs",
-  "types": "./index.d.ts",
+  "types": "./types/index.d.ts",
   "unpkg": "./dist/w-calender.umd.js",
   "exports": {
     ".": {
@@ -22,9 +22,17 @@
   "sideEffects": [
     "*.css"
   ],
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./types/index.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "dev": "w-calender-cli calender-server",
     "build": "w-calender-cli calender-build",
+    "build:types": "tsc -p ./tsconfig.declaration.json",
     "test": "jest"
   },
   "keywords": [

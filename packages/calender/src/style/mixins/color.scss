@@ -1,0 +1,7 @@
+@use 'scss:list';
+
+@function colorPalette($originColor, $i, $format) {
+}
+
+@function generate($color, $options: (dark: false, list: false, index: 6, format: 'hex')) {
+}

@@ -1,4 +1,4 @@
-@use '@/style/mixin' as *;
+@use '@/style/mixins/mixins' as *;
 
 @include cls('scrollbar') {
   &-container {
