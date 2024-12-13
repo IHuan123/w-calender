@@ -14,10 +14,13 @@
     },
     "./esm": "./dist/ch-calendar.mjs",
     "./ch-calendar.css": "./dist/ch-calendar.css",
-    "./dist/*": "./dist/*"
+    "./dist/*": "./dist/*",
+    "./types": "./types/index.d.ts"
   },
   "files": [
-    "dist"
+    "dist",
+    "types/index.d.ts",
+    "types/types/@(common|schedule|time).d.ts"
   ],
   "sideEffects": [
     "*.css"

@@ -1,21 +1,36 @@
 import { render } from 'preact';
 import { DayView } from './components';
+import { Options } from './types/common';
 
-export { DayView };
-
-export interface ChCalenderOptions {}
+import type { ScheduleData, ScheduleItem } from './types/schedule';
 
 class ChCalender {
   el: HTMLElement;
-  options: ChCalenderOptions;
-  constructor(el: HTMLElement, options: ChCalenderOptions) {
+  options?: Options;
+  constructor(el: HTMLElement, options: Options) {
     this.el = el;
-    this.options = options;
+    this.setOptions(options);
     this.render();
   }
   render() {
-    render(DayView({}), this.el);
+    render(
+      DayView({
+        data: [],
+      }),
+      this.el
+    );
+  }
+  // 加载数据
+  data(data: ScheduleData) {}
+  setOptions(options: Options) {
+    this.options = options;
   }
 }
 
+export { DayView };
 export default ChCalender;
+
+/**
+ * @zh types export
+ */
+export type { Options, ScheduleData, ScheduleItem };

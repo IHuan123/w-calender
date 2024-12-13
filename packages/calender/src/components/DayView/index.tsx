@@ -6,10 +6,12 @@ import { getTimes } from '@/utils/time';
 import dayjs from 'dayjs';
 import Header from './Header';
 import ScheduleCard from './ScheduleCard';
-
+import type { ScheduleData } from '@/types/schedule';
 import './style/index.scss';
 
-export type DayViewProps = {};
+export type DayViewProps = {
+  data: ScheduleData;
+};
 
 /**
  * @zh 当天的开始时间和结束时间
