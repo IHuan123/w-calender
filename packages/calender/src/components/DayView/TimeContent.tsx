@@ -41,28 +41,6 @@ function generateCardStyles({
   return style;
 }
 
-/**
- * @zh 移动逻辑
- */
-function onMove(
-  event: any,
-  position: {
-    x: number;
-    y: number;
-  }
-) {
-  position.y += event.dy;
-  if (position.y <= 0) {
-    position.y = 0;
-  }
-  setElementStyle(event.target, {
-    ...getTransform({
-      top: numToPx(position.y),
-      left: numToPx(position.x),
-    }),
-  });
-}
-
 export default function ScheduleCard({ title, startTime, endTime, className }: ScheduleCardProps) {
   let position = { x: 0, y: 0 };
   const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties>(generateCardStyles(position));
@@ -73,28 +51,5 @@ export default function ScheduleCard({ title, startTime, endTime, className }: S
     console.log(styleConfig, cardStyle, position);
   }, [startTime, endTime]);
 
-  /**
-   * @zh 拖拽逻辑
-   */
-  useInteract(`.${cls('schedule-card')}`, void 0, {
-    draggableOptions: {
-      listeners: {
-        start(event) {
-          position = getAttrsTransformTranslate(event.target);
-        },
-
-        move: (e) => onMove(e, position),
-        end() {
-          let curStyle = { ...styleConfig };
-          curStyle.transform = getTransform({
-            top: numToPx(position.y),
-            left: numToPx(position.x),
-          }).transform;
-          setStyleConfig(() => ({ ...curStyle }));
-        },
-      },
-    },
-  });
-
-  return <div className={`${className ?? ''} ${cls('schedule-card')}`} style={styleConfig}></div>;
+  return <div className={`${className ?? ''} ${cls('time-content')}`} style={styleConfig}></div>;
 }

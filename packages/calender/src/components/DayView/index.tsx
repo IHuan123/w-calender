@@ -1,31 +1,38 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
-import { TimeList } from '@wcalender/types/time';
+import { TimeList, ReturnTimeValue } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
 import { getTimes } from '@/utils/time';
-import dayjs from 'dayjs';
 import Header from './Header';
-import ScheduleCard from './ScheduleCard';
-import type { ScheduleData } from '@/types/schedule';
+import TimeContent from './TimeContent';
+import type { ScheduleData, DateRange } from '@/types/schedule';
 import './style/index.scss';
 
 export type DayViewProps = {
-  data: ScheduleData;
+  data?: ScheduleData;
+  date: DateRange;
 };
 
 /**
- * @zh 当天的开始时间和结束时间
+ * @zh 获取时间列表
  */
-const startTime = dayjs().startOf('day').add(1, 'hour'),
-  endTime = dayjs().endOf('day');
+function getTimeList(date: DateRange) {
+  if (!date) {
+    return [];
+  }
+  const [start, end] = date;
+  const startTime = start.time.startOf('day').add(1, 'hour'),
+    endTime = end.time.endOf('day');
+  return getTimes(startTime, endTime, 30, 'minute');
+}
 
 function DayView(props: DayViewProps) {
   const [timeList, setTimeList] = useState<TimeList>();
 
   useEffect(() => {
-    let data = getTimes(startTime, endTime, 30, 'minute');
+    let data = getTimeList(props.date);
     setTimeList(data);
-  }, [startTime, endTime]);
+  }, [props.date]);
 
   return (
     <div className={cls('day')}>
@@ -44,7 +51,7 @@ function DayView(props: DayViewProps) {
             })}
           </div>
           <div className={cls('day-tasks-list')}>
-            <ScheduleCard startTime="" endTime="" title="" />
+            <TimeContent startTime="" endTime="" title="" />
             {timeList?.map((item) => {
               return <div className={cls('day-tasks-list-time-col')}></div>;
             })}

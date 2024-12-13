@@ -116,7 +116,7 @@ $border: 1px solid $color-border-2;
 }
 
 // 日程卡片
-@include cls('schedule-card') {
+@include cls('time-content') {
   position: absolute;
   background-color: rgb($gray-6...);
   border-radius: $border-radius-medium;

@@ -1,13 +1,33 @@
 import { render } from 'preact';
-import { DayView } from './components';
-import { Options } from './types/common';
+import { DayView } from '@/components';
+import { Options, Date } from '@/types/common';
+import type { ScheduleData, ScheduleItem, DateRange, timeType } from '@/types/schedule';
+import { getReturnTime, getTimeStartAndEnd } from '@/utils/time';
+import { isArray } from '@/utils/is';
+import { UnitType } from 'dayjs';
+const defaultOptions: Required<Options> = {
+  date: '',
+  data: [],
+};
 
-import type { ScheduleData, ScheduleItem } from './types/schedule';
+/**
+ * @zh 处理时间
+ */
+function getDate(date: Date, type?: timeType): DateRange {
+  let res = [];
+  if (isArray(date)) {
+    let [start, end] = date;
+    let startTime = getReturnTime(start);
+    let endTime = getReturnTime(end);
+    return [startTime, endTime];
+  }
+  return getTimeStartAndEnd(date, { day: 'D', time: 'h' }[type ?? 'day'] as UnitType);
+}
 
 class ChCalender {
   el: HTMLElement;
-  options?: Options;
-  constructor(el: HTMLElement, options: Options) {
+  options: Options = defaultOptions;
+  constructor(el: HTMLElement, options: Partial<Options>) {
     this.el = el;
     this.setOptions(options);
     this.render();
@@ -15,15 +35,20 @@ class ChCalender {
   render() {
     render(
       DayView({
-        data: [],
+        data: this.options?.data,
+        date: getDate(this.options.date as Date),
       }),
       this.el
     );
   }
+
   // 加载数据
-  data(data: ScheduleData) {}
-  setOptions(options: Options) {
-    this.options = options;
+  data(data: ScheduleData) {
+    this.options.data = data;
+  }
+  // 设置配置
+  setOptions(options: Partial<Options>) {
+    this.options = { ...defaultOptions, ...options };
   }
 }
 

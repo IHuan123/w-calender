@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import dayjs, { UnitType } from 'dayjs';
 import type { TimeValue, ReturnTimeValue, TimeList } from '@wcalender/types/time';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -9,8 +9,16 @@ dayjs.extend(quarterOfYear);
  */
 // 时间格式
 export function getReturnTime(time: TimeValue): ReturnTimeValue {
+  if (dayjs.isDayjs(time)) {
+    // 这里是防止外部没有引入quarterOfYear导致quarter not function的问题
+    time = dayjs(time.format('YYYY-MM-DD HH:mm:ss'));
+  }
   if (typeof time === 'string') {
     time = dayjs(time);
+  }
+
+  if (!time.isValid()) {
+    throw new Error('The time parameter must be a valid time type！');
   }
   return {
     year: time.year(),
@@ -49,4 +57,20 @@ export function getTimes(
   }
 
   return data;
+}
+
+/**
+ * @zh 通过一个时间获取给时间的开始时间和结束时间
+ */
+export function getTimeStartAndEnd(
+  time: TimeValue,
+  type: UnitType
+): [ReturnTimeValue, ReturnTimeValue] | never {
+  time = dayjs(time);
+  if (!time.isValid()) {
+    throw new Error('The time parameter must be a valid time type！');
+  }
+  let start = time.startOf(type);
+  let end = time.endOf(type);
+  return [getReturnTime(start), getReturnTime(end)];
 }

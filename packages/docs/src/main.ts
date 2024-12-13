@@ -1,6 +1,7 @@
 import ChCalender from 'w-calender';
 import type { Options } from 'w-calender/types';
 import dayjs from 'dayjs';
+
 import 'w-calender/dist/w-calender.css';
 function main() {
   const options: Options = {
@@ -31,6 +32,7 @@ function main() {
         end: dayjs().format('YYYY-MM-DD 15:00'),
       },
     ],
+    date: dayjs(),
   };
 
   let context = new ChCalender(document.getElementById('root')!, options);
