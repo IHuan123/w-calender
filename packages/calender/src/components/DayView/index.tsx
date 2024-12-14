@@ -37,23 +37,23 @@ function DayView(props: DayViewProps) {
   return (
     <div className={cls('day')}>
       <Header />
-      <Scrollbar hideBar className={cls('task-scrollbar')}>
-        <div className={cls('day-tasks')}>
-          <div className={cls('day-tasks-time')}>
+      <Scrollbar hideBar className={cls('grid-scrollbar')}>
+        <div className={cls('day-grid')}>
+          <div className={cls('day-grid-time')}>
             {timeList?.map((item) => {
               return (
-                <div className={cls('day-tasks-time-col')}>
-                  <span className={cls('day-tasks-time-col-label')}>
+                <div className={cls('day-grid-time-col')}>
+                  <span className={cls('day-grid-time-col-label')}>
                     {item.time.time.format('HH:mm')}
                   </span>
                 </div>
               );
             })}
           </div>
-          <div className={cls('day-tasks-list')}>
+          <div className={cls('day-grid-columns')}>
             <TimeContent startTime="" endTime="" title="" />
             {timeList?.map((item) => {
-              return <div className={cls('day-tasks-list-time-col')}></div>;
+              return <div className={cls('day-grid-columns-col')}></div>;
             })}
           </div>
         </div>

@@ -7,6 +7,8 @@
     "test": "echo \"Error: no test specified\"",
     "prepare": "husky",
     "commitlint": "npx commitlint --config .commitlintrc -e -V",
+    "dev:components": "pnpm -r --parallel -F 'w-calender' run dev",
+    "dev:docs": "pnpm -r --parallel -F '@w-calender/docs' run dev",
     "dev": "pnpm -r --parallel --filter='./packages/*' run dev",
     "build": "pnpm -r --parallel --filter='./packages/*' run build"
   },

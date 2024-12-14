@@ -10,6 +10,7 @@ import {
   getTransform,
   numToPx,
 } from '@/utils/dom';
+import './style/timeContent.scss';
 
 export interface ScheduleCardProps {
   title: string;
@@ -51,5 +52,7 @@ export default function ScheduleCard({ title, startTime, endTime, className }: S
     console.log(styleConfig, cardStyle, position);
   }, [startTime, endTime]);
 
-  return <div className={`${className ?? ''} ${cls('time-content')}`} style={styleConfig}></div>;
+  return (
+    <div className={`${className ?? ''} ${cls('time-layout-content')}`} style={styleConfig}></div>
+  );
 }

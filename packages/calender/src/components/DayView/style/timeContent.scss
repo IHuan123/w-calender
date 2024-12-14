@@ -1,0 +1,10 @@
+@use '@/style/mixins/mixins' as *;
+// 日程卡片
+@include cls('time-layout-content') {
+  position: absolute;
+  background-color: rgb($gray-6...);
+  border-radius: $border-radius-medium;
+  box-sizing: border-box;
+  box-shadow: $shadow1-center;
+  @include vertical-decorate-line(rgb($primary-3...));
+}
