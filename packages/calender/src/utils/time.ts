@@ -74,3 +74,14 @@ export function getTimeStartAndEnd(
   let end = time.endOf(type);
   return [getReturnTime(start), getReturnTime(end)];
 }
+
+/**
+ * @zh 判断两个时间段是否存在交叉
+ */
+
+export function isCrossoverTime(
+  o: [ReturnTimeValue, ReturnTimeValue],
+  t: [ReturnTimeValue, ReturnTimeValue]
+): boolean {
+  return !(o[0].time.isAfter(t[1].time) || o[1].time.isBefore(t[0].time));
+}

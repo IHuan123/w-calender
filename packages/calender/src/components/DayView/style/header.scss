@@ -1,0 +1,37 @@
+@use '@/style/mixins/mixins' as *;
+$time-period-width: 72px;
+$col-height: var(--col-h);
+$border: 1px solid $color-border-2;
+// 表格头部
+@include cls('day-header') {
+  width: 100%;
+  min-height: $col-height;
+  max-height: 100px;
+  display: flex;
+  flex-shrink: 0;
+  border: $border;
+  border-bottom: 0;
+  &-date {
+    width: $time-period-width;
+    flex-shrink: 0;
+    border-right: $border;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    &-text {
+      font-size: 12px;
+      color: $color-text-2;
+    }
+  }
+  &-rows {
+    flex: 1;
+    padding: 4px;
+    box-sizing: border-box;
+    @include cls('today-schedule-item') {
+      margin-top: 4px;
+      &:first-of-type {
+        margin-top: 0;
+      }
+    }
+  }
+}

@@ -3,14 +3,14 @@ import { isUndef } from './is';
 /**
  * 获取px
  */
-export function numToPx(n: string | number = 0) {
+export function numToPx(n: string | number = 0, defaultValue: string = '0px') {
   if (typeof n === 'number') {
     return addUnit(n, 'px');
   }
   if (typeof n === 'string' && n.endsWith('px')) {
     return n;
   }
-  return '0px';
+  return defaultValue;
 }
 /**
  * 判断是否为HTML元素

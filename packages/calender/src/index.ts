@@ -35,7 +35,7 @@ class ChCalender {
   render() {
     render(
       DayView({
-        data: this.options?.data,
+        data: this.options.data,
         date: getDate(this.options.date as Date),
       }),
       this.el
