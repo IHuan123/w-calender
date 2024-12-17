@@ -1,4 +1,3 @@
-import { useEffect, useState, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
 import { TimeList } from '@wcalender/types/time';
 interface HourRowsProps {
@@ -11,7 +10,7 @@ export default function (props: HourRowsProps) {
       {props.data?.map((item, index) => {
         return (
           <div className={cls('time-line-col')}>
-            <span className={cls('time-line-col-label')}>{item.time.time.format('HH:mm')}</span>
+            <span className={cls('time-line-col-label')}>{item.start.time.format('HH:mm')}</span>
           </div>
         );
       })}

@@ -3,8 +3,7 @@ import dayjs from 'dayjs';
 import type { ScheduleData } from '@/types/schedule';
 import type { RenderTime } from '@wcalender/types/DayView';
 import { getReturnTime, isCrossoverTime } from '@/utils/time';
-import { ReturnTimeValue } from '@wcalender/types/time';
-import { createUniqueId } from '@/utils/common';
+import { createUniqueId, arrayGroupByValue } from '@/utils/common';
 import { isEmpty } from '@/utils/is';
 
 /**
@@ -32,88 +31,100 @@ function getData(data: ScheduleData): Array<RenderTime> {
 }
 
 /**
- * @zh 计算y ,h坐标位置信息
- */
-function calculateYAndH(
-  start: ReturnTimeValue,
-  end: ReturnTimeValue,
-  interval: number,
-  colHeight: number
-) {
-  let startTimeValue = start.time.diff(start.time.startOf('day'), 'second');
-  let timeValue = end.time.diff(start.time, 'second');
-  let y = (startTimeValue / (interval * 60)) * colHeight;
-  let h = (timeValue / (interval * 60)) * colHeight;
-
-  return { y, h };
-}
-
-/**
- * @zh 计算布局数据
+ * @zh 布局配置
+ * @en Layout configuration
  */
 type CalculateRectReturn = Array<
   RenderTime & {
     colIndex: number;
-    rect: { x: number; y: number; w: number | string; h: number };
   }
 >;
 
-function calculateRect(
-  data: Array<RenderTime>,
-  interval: number,
-  colHeight: number
-): CalculateRectReturn {
-  let res: CalculateRectReturn = [];
-  data.map((item, index) => {
-    console.log(item);
-    let posiYH = calculateYAndH(item.start, item.end, interval, colHeight);
-    let hasCrossoverTime = res.some((cur) =>
-      isCrossoverTime([item.start, item.end], [cur.start, cur.end])
+/**
+ * 获取data column index
+ */
+function getDataColIdx(
+  item: RenderTime,
+  group: {
+    totalColumn: number;
+    data: CalculateRectReturn;
+  }
+) {
+  let preNextCol = 0;
+
+  let cols = arrayGroupByValue(group.data, 'colIndex').sort((a, b) => {
+    return a.groupValue - b.groupValue;
+  });
+  for (let i = 0; i < cols.length; i++) {
+    let { group: col, groupValue: colValue } = cols[i];
+
+    let isCross = col.some(({ start, end }) =>
+      isCrossoverTime([item.start, item.end], [start, end])
     );
 
-    if (isEmpty(res) || !hasCrossoverTime) {
-      res.push({
-        ...item,
-        rect: {
-          x: 0,
-          ...posiYH,
-          w: '100%',
-        },
-        colIndex: 0,
-      });
+    if (!isCross) {
+      return colValue;
     } else {
-      // --- 问题点 ，如何进行堆放，这里重复添加问题
-      for (let i = 0; i < res.length; i++) {
-        let cur = res[i];
-        let colIndex = cur.colIndex;
-        let isCrossover = isCrossoverTime([item.start, item.end], [cur.start, cur.end]);
-        if (!isCrossover) {
-          res.push({
-            ...item,
-            rect: {
-              x: 0,
-              ...posiYH,
-              w: '100%',
-            },
-            colIndex: colIndex,
-          });
-        }
+      preNextCol += 1;
+    }
+  }
+  return preNextCol;
+}
+
+/**
+ * @zh 处理数据
+ */
+function handleGridCols(data: Array<RenderTime>) {
+  console.log('handleGridCols', data);
+  let groups: Array<{
+    totalColumn: number;
+    data: CalculateRectReturn;
+  }> = [];
+  data.map((item) => {
+    // 获取配置
+    const getConfig = (item: RenderTime, colIndex: number = 0) => {
+      return {
+        ...item,
+        colIndex: colIndex,
+      };
+    };
+
+    // 获取cols num
+    const getColNum = (groupData: CalculateRectReturn) => {
+      return Math.max(...groupData.map((item) => item.colIndex)) + 1;
+    };
+
+    // 如何为分组为空，则进行添加
+    if (isEmpty(groups)) {
+      groups.push({
+        totalColumn: 1,
+        data: [getConfig(item)],
+      });
+      // 如果存在分组，看是否有两个时间有交叉
+    } else {
+      let corssGroup = groups.find((group) => {
+        return group.data.some((cur) =>
+          isCrossoverTime([item.start, item.end], [cur.start, cur.end])
+        );
+      });
+
+      if (corssGroup) {
+        corssGroup.data.push(getConfig(item, getDataColIdx(item, corssGroup)));
+        corssGroup.totalColumn = getColNum(corssGroup.data);
+      } else {
+        groups.push({
+          totalColumn: 1,
+          data: [getConfig(item)],
+        });
       }
     }
   });
-  return res;
+  console.log('handleData res:', groups);
+  return groups;
 }
 
-export default function useData({
-  data,
-  interval,
-  colHeight,
-}: {
-  data: ScheduleData;
-  interval: number;
-  colHeight: number;
-}) {
-  const [list, setList] = useState<Array<RenderTime>>();
+export default function useData({ data }: { data: ScheduleData }) {
+  const [list, setList] = useState<Array<RenderTime>>([]);
 
   // 头部列表渲染
   const todayData = useMemo(() => {
@@ -122,7 +133,7 @@ export default function useData({
 
   // 列表布局中数据
   const renderData = useMemo(() => {
-    return calculateRect(list?.filter((item) => item.type === 'time') ?? [], interval, colHeight);
+    return handleGridCols(list?.filter((item) => item.type === 'time') ?? []);
   }, [list]);
 
   useEffect(() => {

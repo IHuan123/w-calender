@@ -1,6 +1,7 @@
-import { render } from 'preact';
-import { DayView } from '@/components';
+import { render, FunctionComponent } from 'preact';
+import { DayView, WeekView, MonthView } from '@/components';
 import { Options, Date } from '@/types/common';
+import { ViewType } from '@/types/options';
 import type { ScheduleData, ScheduleItem, DateRange, timeType } from '@/types/schedule';
 import { getReturnTime, getTimeStartAndEnd } from '@/utils/time';
 import { isArray } from '@/utils/is';
@@ -9,7 +10,14 @@ const defaultOptions: Required<Options> = {
   date: '',
   data: [],
 };
-
+const views: Record<ViewType, FunctionComponent<any>> = {
+  day: DayView,
+  D: DayView,
+  week: WeekView,
+  W: WeekView,
+  month: MonthView,
+  M: MonthView,
+};
 /**
  * @zh 处理时间
  */
@@ -33,13 +41,7 @@ class ChCalender {
     this.render();
   }
   render() {
-    render(
-      DayView({
-        data: this.options.data,
-        date: getDate(this.options.date as Date),
-      }),
-      this.el
-    );
+    render(<DayView data={this.options.data} date={getDate(this.options.date as Date)} />, this.el);
   }
 
   // 加载数据

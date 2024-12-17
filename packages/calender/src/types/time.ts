@@ -16,5 +16,6 @@ export type ReturnTimeValue = {
 };
 
 export type TimeList = Array<{
-  time: ReturnTimeValue;
+  start: ReturnTimeValue;
+  end: ReturnTimeValue;
 }>;

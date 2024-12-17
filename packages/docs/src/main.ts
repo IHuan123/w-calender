@@ -30,12 +30,7 @@ function main() {
         end: dayjs().format('YYYY-MM-DD 14:00'),
         title: '这里是测试4',
       },
-      {
-        type: 'time',
-        start: dayjs().format('YYYY-MM-DD 12:00'),
-        end: dayjs().format('YYYY-MM-DD 14:00'),
-        title: '这里是测试5',
-      },
+
       {
         type: 'time',
         start: dayjs().format('YYYY-MM-DD 13:00'),
@@ -44,9 +39,27 @@ function main() {
       },
       {
         type: 'time',
+        start: dayjs().format('YYYY-MM-DD 12:00'),
+        end: dayjs().format('YYYY-MM-DD 14:00'),
+        title: '这里是测试5',
+      },
+      {
+        type: 'time',
         start: dayjs().format('YYYY-MM-DD 15:30'),
-        end: dayjs().format('YYYY-MM-DD 15:50'),
+        end: dayjs().format('YYYY-MM-DD 16:50'),
         title: '这里是测试7',
+      },
+      {
+        type: 'time',
+        start: dayjs().format('YYYY-MM-DD 14:10'),
+        end: dayjs().format('YYYY-MM-DD 15:00'),
+        title: '这里是测试8',
+      },
+      {
+        type: 'time',
+        start: dayjs().format('YYYY-MM-DD 14:50'),
+        end: dayjs().format('YYYY-MM-DD 15:50'),
+        title: '这里是测试9',
       },
     ],
     date: dayjs(),

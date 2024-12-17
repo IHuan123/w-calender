@@ -17,6 +17,15 @@ $border: 1px solid $color-border-2;
     &-layout {
       width: 100%;
       position: relative;
+      background: linear-gradient(
+          to bottom,
+          $color-border-2 0px,
+          $color-border-2 1px,
+          #fff 1px,
+          #fff 100%
+        )
+        repeat-y;
+      background-size: 100% $col-height;
       &-col {
         height: $col-height;
         border-bottom: $border;
@@ -87,4 +96,26 @@ $border: 1px solid $color-border-2;
 
 @include cls('grid-box') {
   position: absolute;
+}
+
+// 时间线
+@include cls('time-indicate-line') {
+  width: 100%;
+  height: 1px;
+  background: rgb($primary-4...);
+  position: absolute;
+  left: 0;
+  z-index: 9;
+  $indicate-dot-size: 8px;
+  &::before {
+    position: absolute;
+    display: block;
+    content: '';
+    width: $indicate-dot-size;
+    height: $indicate-dot-size;
+    background: rgb($primary-6...);
+    left: -$indicate-dot-size / 2;
+    top: -$indicate-dot-size / 2;
+    border-radius: 100%;
+  }
 }

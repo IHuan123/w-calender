@@ -52,8 +52,10 @@ export function getTimes(
   let data: TimeList = [];
 
   while (endTime.time.isAfter(startTime.time)) {
-    data.push({ time: startTime });
-    startTime = getReturnTime(startTime.time.add(interval, unit));
+    let nextTime = getReturnTime(startTime.time.add(interval, unit));
+    let config = { start: startTime, end: nextTime };
+    data.push(config);
+    startTime = nextTime;
   }
 
   return data;

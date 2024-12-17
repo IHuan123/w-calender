@@ -33,7 +33,7 @@ export default defineConfig({
     outDir: path.resolve(root, './dist'),
     rollupOptions: {},
     lib: {
-      entry: path.resolve(root, './src/index.ts'),
+      entry: path.resolve(root, './src/index.tsx'),
       formats: ['umd', 'es'],
       name: 'w-calender',
     },
