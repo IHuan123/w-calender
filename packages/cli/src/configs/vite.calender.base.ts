@@ -10,12 +10,13 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: [
-      {
-        find: '@',
-        replacement: path.resolve(root, './src'),
-      },
-    ],
+    alias: {
+      '@': path.resolve(root, './src'),
+      react: 'preact/compat',
+      'react-dom/test-utils': 'preact/test-utils',
+      'react-dom': 'preact/compat', // 必须放在 test-utils 下面
+      'react/jsx-runtime': 'preact/jsx-runtime',
+    },
   },
   css: {
     preprocessorOptions: {

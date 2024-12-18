@@ -4,7 +4,6 @@ import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
 import { getTimes } from '@/utils/time';
-import { deepClone } from '@/utils/common';
 import Header from './Header';
 import TimeContent from './TimeContent';
 import TimeLine from './TimeLine';
@@ -75,7 +74,6 @@ function DayView(props: DayViewProps) {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useState<TimeList>([]);
   const [dragLayout, setDragLayout] = useState<{ rect: Rect; data: RenderTime } | null>(null);
-
   const containerSize = useElementBounding(scrollContainer);
 
   const { todayData, renderData } = useData({
@@ -93,8 +91,8 @@ function DayView(props: DayViewProps) {
   let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
   useBusListener({
     [DRAG_START]: (e: any, data: RenderTime, rect: Rect) => {
-      setDragLayout(() => ({ rect, data }));
-      position = rect;
+      setDragLayout({ rect: { ...rect }, data });
+      position = { ...rect };
     },
     [DRAG_MOVE]: (event) => {
       position.y += event.dy;
@@ -102,17 +100,12 @@ function DayView(props: DayViewProps) {
       if (dragEl) {
         (dragEl as HTMLElement).style.transform = `translate(${position.x}px, ${position.y}px)`;
       }
+
       // 这里需要 优化
-      // console.log(dragLayout);
-      // if (dragLayout) {
-      //   let drag = { ...dragLayout };
-      //   drag.rect = position;
-      //   setDragLayout(drag);
-      //   console.log(dragLayout);
-      // }
+      console.log(dragLayout);
     },
     [DRAG_END]: () => {
-      setDragLayout(() => null);
+      setDragLayout(null);
     },
     [RESIZE_START]: (e: any, data: RenderTime, rect: Rect) => {
       setDragLayout({ rect, data });
@@ -136,14 +129,8 @@ function DayView(props: DayViewProps) {
    * @zh 拖拽样式
    */
   function DragBlock({ layout, children }: { layout: Rect; children?: ComponentChildren }) {
-    // useEffect(() => {
-    //   console.log(layout);
-    // }, [layout]);
-    const style = useMemo(() => {
-      return genStyles(layout);
-    }, [layout]);
     return (
-      <div className={cls('drag-block')} style={style}>
+      <div className={cls('drag-block')} style={genStyles(layout)}>
         {children}
       </div>
     );
