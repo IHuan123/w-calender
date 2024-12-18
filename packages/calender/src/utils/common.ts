@@ -1,4 +1,5 @@
-import { isUndef } from './is';
+import { RefObject } from 'preact';
+import { isUndef, isRef } from './is';
 /**
  * @zh 添加单位
  */
@@ -62,4 +63,12 @@ export function arrayGroupByValue<T, K extends keyof T>(data: Array<T>, groupKey
     groupValue,
     group,
   }));
+}
+
+export function unref<T>(target: T | RefObject<T>): T | null {
+  if (isRef(target)) {
+    return target.current;
+  } else {
+    return target;
+  }
 }

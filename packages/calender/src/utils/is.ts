@@ -1,4 +1,17 @@
+import { RefObject } from 'preact';
 export const isClient = typeof window !== 'undefined' && typeof document !== 'undefined';
+/**
+ * 判断是否为HTML元素
+ */
+export function isElement(el: any): el is HTMLElement {
+  return typeof HTMLElement === 'object'
+    ? el instanceof HTMLElement //DOM2
+    : el &&
+        typeof el === 'object' &&
+        el !== null &&
+        el.nodeType === 1 &&
+        typeof el.nodeName === 'string';
+}
 
 export function isUndef(v: any): v is undefined | null {
   return v === undefined || v === null;
@@ -34,4 +47,14 @@ export function isEmpty(target: any) {
     (Array.isArray(target) && target.length === 0) ||
     (isObject(target) && Reflect.ownKeys(target).length === 0)
   );
+}
+
+/**
+ * @zh 判断是否为useRef
+ */
+export function isRef<T>(val: any): val is RefObject<T> {
+  if (typeof val !== 'object') {
+    return false;
+  }
+  return 'current' in val;
 }

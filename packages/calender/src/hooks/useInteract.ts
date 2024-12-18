@@ -1,26 +1,52 @@
+import { RefObject } from 'preact';
 import interact from 'interactjs';
-import { Options, Target, Listeners } from '@interactjs/types';
+import type { Options, Target, Listeners, Interactable, EdgeOptions } from '@interactjs/types';
 import { useEffect } from 'preact/hooks';
-
+import { unref } from '@/utils/common';
+import { isUndef } from '@/utils/is';
 export interface InteractEventOptions {
-  draggableOptions?: { listeners: Listeners };
+  draggableEvents?: { autoScroll?: boolean; listeners: Listeners };
+  pointerEvents?: { listeners: Listeners };
+  resizeEvents?: { edges?: EdgeOptions; listeners: Listeners };
 }
+type UseInteractTarget = Target | RefObject<Target>;
+
 /**
  * @zh 手势hooks
  */
 export default function useInteract(
-  el: Target,
+  target: UseInteractTarget,
   options?: Options,
   eventOptions?: InteractEventOptions
 ) {
-  let interactCtx;
+  let interactCtx: Interactable | null = null;
+
+  // 初始化事件
+  function initEvent(ctx: Interactable, eventOptions: InteractEventOptions) {
+    if (!isUndef(eventOptions?.draggableEvents)) {
+      ctx.draggable(eventOptions.draggableEvents);
+    }
+    if (!isUndef(eventOptions?.pointerEvents)) {
+      ctx.pointerEvents(eventOptions.pointerEvents);
+    }
+    if (!isUndef(eventOptions?.resizeEvents)) {
+      ctx.resizable(eventOptions.resizeEvents);
+    }
+  }
 
   useEffect(() => {
-    interactCtx = interact(el, options).draggable(eventOptions?.draggableOptions);
+    let el = unref<Target>(target);
+    if (el) {
+      interactCtx = interact(el, options);
+      if (eventOptions) {
+        initEvent(interactCtx, eventOptions);
+      }
+    }
+
     return () => {
       interactCtx = null;
     };
-  }, [el, options]);
+  }, [target, options]);
   return {
     context: interactCtx,
   };

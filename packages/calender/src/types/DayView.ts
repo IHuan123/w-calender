@@ -25,11 +25,17 @@ export interface ScheduleCardProps {
   className?: string;
 }
 
-export interface GridBoxProps {
-  w: number | string;
-  h: number;
+export type Rect = {
   x: number | string;
   y: number;
+  h: number;
+  w: number | string;
+};
+
+export interface GridBoxProps extends Rect {
   className?: string;
   children?: ComponentChildren;
+  data?: RenderTime;
+  colH?: number;
+  interval?: number;
 }

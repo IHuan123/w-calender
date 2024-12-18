@@ -1,28 +1,22 @@
 import { isUndef } from '@/utils/is';
-type EventCallback = (e: any) => void;
+export type EventCallback = (...e: any) => void;
 
 export interface BusInterface {
-  events: {
-    [propname: symbol]: Array<EventCallback>;
-  };
-  taskCallBackCache: {
-    [propname: symbol]: any;
-  };
-  $emit: <P>(evt: symbol, ...args: P[]) => void;
-  $on: (evt: symbol, callback: EventCallback, autoTrigger: boolean) => void;
-  $once: (evt: symbol, callback: EventCallback, autoTrigger: boolean) => void;
+  $emit(evt: symbol, ...args: any): void;
+  $on(evt: symbol, callback: EventCallback, autoTrigger: boolean): void;
+  $once(evt: symbol, callback: EventCallback, autoTrigger: boolean): void;
   $off: (evt: symbol, callback: EventCallback) => void;
-  clear: () => void;
+  clear(): void;
 }
 
 /**
  * @zh 全局事件
  */
 export class Bus implements BusInterface {
-  events: {
+  private events: {
     [propname: symbol]: Array<EventCallback>;
   } = {};
-  taskCallBackCache: {
+  private taskCallBackCache: {
     [propname: symbol]: any;
   } = {};
   constructor() {}
@@ -32,7 +26,7 @@ export class Bus implements BusInterface {
    * callback: 绑定函数
    * autoTrigger: 在初次绑定监听函数时如果有缓存数据，是否需要主动触发一次，默认为false
    */
-  $on(evt: symbol, callback: EventCallback, autoTrigger = true) {
+  $on(evt: symbol, callback: EventCallback, autoTrigger = false) {
     if (!this.events[evt]) this.events[evt] = [];
     this.events[evt].push(callback);
     if (Reflect.has(this.taskCallBackCache, evt)) {
@@ -62,12 +56,13 @@ export class Bus implements BusInterface {
         this.events[evt] = this.events[evt].filter((cb) => cb !== callback);
       } else {
         delete this.events[evt];
+        this.taskCallBackCache[evt] = null;
       }
     }
     return this;
   }
   // 只进行一次的事件订阅
-  $once<P>(evt: symbol, callback: EventCallback, ctx: any) {
+  $once(evt: symbol, callback: EventCallback, ctx: any) {
     const proxyCallback: EventCallback = (...payload: any) => {
       callback.apply(ctx, payload);
       // 回调函数执行完成之后就删除事件订阅

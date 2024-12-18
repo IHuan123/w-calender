@@ -75,7 +75,6 @@ function getDataColIdx(
  * @zh 处理数据
  */
 function handleGridCols(data: Array<RenderTime>) {
-  console.log('handleGridCols', data);
   let groups: Array<{
     totalColumn: number;
     data: CalculateRectReturn;
@@ -119,7 +118,6 @@ function handleGridCols(data: Array<RenderTime>) {
       }
     }
   });
-  console.log('handleData res:', groups);
   return groups;
 }
 

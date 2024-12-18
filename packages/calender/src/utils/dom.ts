@@ -1,5 +1,5 @@
 import { addUnit } from './common';
-import { isUndef } from './is';
+import { isUndef, isElement } from './is';
 /**
  * 获取px
  */
@@ -11,18 +11,6 @@ export function numToPx(n: string | number = 0, defaultValue: string = '0px') {
     return n;
   }
   return defaultValue;
-}
-/**
- * 判断是否为HTML元素
- */
-export function isElement(el: any): el is HTMLElement {
-  return typeof HTMLElement === 'object'
-    ? el instanceof HTMLElement //DOM2
-    : el &&
-        typeof el === 'object' &&
-        el !== null &&
-        el.nodeType === 1 &&
-        typeof el.nodeName === 'string';
 }
 
 /**

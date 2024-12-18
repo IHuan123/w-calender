@@ -1,20 +1,31 @@
-import { useEffect, useState, useRef } from 'preact/hooks';
+import { ComponentChildren } from 'preact';
+import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
 import { getTimes } from '@/utils/time';
+import { deepClone } from '@/utils/common';
 import Header from './Header';
 import TimeContent from './TimeContent';
 import TimeLine from './TimeLine';
 import TimeIndicateLine from './TimeIndicateLine';
 import type { DateRange } from '@/types/schedule';
-import type { DayViewProps, RenderTime } from '@wcalender/types/DayView';
+import type { DayViewProps, RenderTime, Rect } from '@wcalender/types/DayView';
 import GirdBox from './GirdBox';
 import useData from './hooks/useData';
 import useElementBounding from '@/hooks/useResize';
 import dayjs, { Dayjs } from 'dayjs';
-import EventContainer from './EventContainer';
+import {
+  DRAG_START,
+  DRAG_MOVE,
+  DRAG_END,
+  RESIZE_START,
+  RESIZE_MOVE,
+  RESIZE_END,
+} from '@/constant/busEventName';
 import './style/index.scss';
+import useBusListener from '@/hooks/useBusListener';
+import { genStyles } from '../_utils';
 
 const colH = 42;
 const interval = 30;
@@ -49,7 +60,6 @@ function calculateRect(
     colIndex: number;
   },
   totalColumn: number,
-  interval: number,
   colHeight: number,
   containerWidth: number
 ) {
@@ -64,8 +74,10 @@ function calculateRect(
 function DayView(props: DayViewProps) {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useState<TimeList>([]);
+  const [dragLayout, setDragLayout] = useState<{ rect: Rect; data: RenderTime } | null>(null);
 
   const containerSize = useElementBounding(scrollContainer);
+
   const { todayData, renderData } = useData({
     data: props.data,
   });
@@ -74,6 +86,68 @@ function DayView(props: DayViewProps) {
     let data = getTimeList(props.date);
     setTimeList(data);
   }, [props.date, props.data]);
+
+  /**
+   * @zh 初始化bus事件
+   */
+  let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
+  useBusListener({
+    [DRAG_START]: (e: any, data: RenderTime, rect: Rect) => {
+      setDragLayout(() => ({ rect, data }));
+      position = rect;
+    },
+    [DRAG_MOVE]: (event) => {
+      position.y += event.dy;
+      let dragEl = document.querySelector(`.${cls('drag-block')}`);
+      if (dragEl) {
+        (dragEl as HTMLElement).style.transform = `translate(${position.x}px, ${position.y}px)`;
+      }
+      // 这里需要 优化
+      // console.log(dragLayout);
+      // if (dragLayout) {
+      //   let drag = { ...dragLayout };
+      //   drag.rect = position;
+      //   setDragLayout(drag);
+      //   console.log(dragLayout);
+      // }
+    },
+    [DRAG_END]: () => {
+      setDragLayout(() => null);
+    },
+    [RESIZE_START]: (e: any, data: RenderTime, rect: Rect) => {
+      setDragLayout({ rect, data });
+      position = rect;
+    },
+    [RESIZE_MOVE]: (event) => {
+      let dragEl = document.querySelector(`.${cls('drag-block')}`);
+      if (dragEl) {
+        Object.assign((dragEl as HTMLElement).style, {
+          width: '100%',
+          height: `${event.rect.height}px`,
+        });
+      }
+    },
+    [RESIZE_END]: () => {
+      setDragLayout(null);
+    },
+  });
+
+  /**
+   * @zh 拖拽样式
+   */
+  function DragBlock({ layout, children }: { layout: Rect; children?: ComponentChildren }) {
+    // useEffect(() => {
+    //   console.log(layout);
+    // }, [layout]);
+    const style = useMemo(() => {
+      return genStyles(layout);
+    }, [layout]);
+    return (
+      <div className={cls('drag-block')} style={style}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className={cls('day')}>
@@ -85,7 +159,11 @@ function DayView(props: DayViewProps) {
             {renderData?.map((group) =>
               group.data.map((item) => (
                 <GirdBox
-                  {...calculateRect(item, group.totalColumn, interval, colH, containerSize.width)}
+                  {...calculateRect(item, group.totalColumn, colH, containerSize.width)}
+                  key={item._key}
+                  data={item}
+                  colH={colH}
+                  interval={interval}
                 >
                   <TimeContent title={item.title} />
                 </GirdBox>
@@ -93,6 +171,11 @@ function DayView(props: DayViewProps) {
             )}
 
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
+            {dragLayout && (
+              <DragBlock layout={dragLayout.rect}>
+                <TimeContent title={dragLayout.data.title} />
+              </DragBlock>
+            )}
           </div>
         </div>
       </Scrollbar>
