@@ -3,7 +3,8 @@ import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
-import { getTimes } from '@/utils/time';
+import { getTimes, getReturnTime } from '@/utils/time';
+import { setElementStyle, getTransform, numToPx } from '@/utils/dom';
 import Header from './Header';
 import TimeContent from './TimeContent';
 import TimeLine from './TimeLine';
@@ -25,6 +26,7 @@ import {
 import './style/index.scss';
 import useBusListener from '@/hooks/useBusListener';
 import { genStyles } from '../_utils';
+import { isUndef } from '@/utils/is';
 
 const colH = 42;
 const interval = 30;
@@ -47,8 +49,14 @@ function getTimeList(date: DateRange) {
  */
 function calculateDistance(start: Dayjs, end: Dayjs, colHeight: number) {
   let timeValue = end.diff(start, 'second');
-
   return (timeValue / (interval * 60)) * colHeight;
+}
+
+/**
+ * 计算偏移量转换为时间
+ */
+function offsetToTimeValue(offset: number) {
+  return (interval / colH) * 60 * offset;
 }
 
 /**
@@ -73,12 +81,20 @@ function calculateRect(
 function DayView(props: DayViewProps) {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useState<TimeList>([]);
-  const [dragLayout, setDragLayout] = useState<{ rect: Rect; data: RenderTime } | null>(null);
+  const [dragConfig, setDragConf] = useState<{ rect: Rect; data: RenderTime } | null>(null);
   const containerSize = useElementBounding(scrollContainer);
 
   const { todayData, renderData } = useData({
     data: props.data,
   });
+
+  /**
+   * 拖动时的时间
+   */
+  const dragTime = useMemo(() => {
+    if (isUndef(dragConfig)) return null;
+    return dragConfig.data.start.time.format('YYYY-MM-DD HH:mm');
+  }, [dragConfig]);
 
   useEffect(() => {
     let data = getTimeList(props.date);
@@ -91,37 +107,57 @@ function DayView(props: DayViewProps) {
   let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
   useBusListener({
     [DRAG_START]: (e: any, data: RenderTime, rect: Rect) => {
-      setDragLayout({ rect: { ...rect }, data });
+      setDragConf({ rect: { ...rect }, data });
       position = { ...rect };
     },
-    [DRAG_MOVE]: (event) => {
+    [DRAG_MOVE]: (event, data: RenderTime) => {
       position.y += event.dy;
       let dragEl = document.querySelector(`.${cls('drag-block')}`);
       if (dragEl) {
-        (dragEl as HTMLElement).style.transform = `translate(${position.x}px, ${position.y}px)`;
+        setElementStyle(
+          dragEl as HTMLElement,
+          getTransform({
+            width: '100%',
+            height: numToPx(position.h),
+            left: numToPx(position.x),
+            top: numToPx(position.y),
+          })
+        );
       }
-
-      // 这里需要 优化
-      console.log(dragLayout);
+      let dragData = { ...data };
+      dragData.start = getReturnTime(
+        dayjs()
+          .startOf('day')
+          .add(offsetToTimeValue(position.y + 21), 'second')
+      );
+      dragData.end = getReturnTime(
+        dayjs()
+          .startOf('day')
+          .add(offsetToTimeValue(position.y + position.h), 'second')
+      );
+      setDragConf({
+        rect: position,
+        data: dragData,
+      });
     },
     [DRAG_END]: () => {
-      setDragLayout(null);
+      setDragConf(null);
     },
     [RESIZE_START]: (e: any, data: RenderTime, rect: Rect) => {
-      setDragLayout({ rect, data });
+      setDragConf({ rect, data });
       position = rect;
     },
     [RESIZE_MOVE]: (event) => {
       let dragEl = document.querySelector(`.${cls('drag-block')}`);
       if (dragEl) {
-        Object.assign((dragEl as HTMLElement).style, {
+        setElementStyle(dragEl as HTMLElement, {
           width: '100%',
-          height: `${event.rect.height}px`,
+          height: numToPx(event.rect.height),
         });
       }
     },
     [RESIZE_END]: () => {
-      setDragLayout(null);
+      setDragConf(null);
     },
   });
 
@@ -158,9 +194,10 @@ function DayView(props: DayViewProps) {
             )}
 
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
-            {dragLayout && (
-              <DragBlock layout={dragLayout.rect}>
-                <TimeContent title={dragLayout.data.title} />
+            {dragConfig && (
+              <DragBlock layout={dragConfig.rect}>
+                {dragTime}
+                <TimeContent title={dragConfig.data.title} />
               </DragBlock>
             )}
           </div>
