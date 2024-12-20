@@ -1,10 +1,6 @@
 import { ComponentChildren } from 'preact';
 import { ReturnTimeValue } from '@wcalender/types/time';
-import type { ScheduleData, DateRange, timeType } from '@/types/schedule';
-export type DayViewProps = {
-  data: ScheduleData;
-  date: DateRange;
-};
+import type { timeType } from '@/types/schedule';
 
 export type RenderTime = {
   title: string;

@@ -63,6 +63,7 @@ function main() {
       },
     ],
     date: dayjs(),
+    viewType: 'D',
   };
 
   let context = new ChCalender(document.getElementById('root')!, options);

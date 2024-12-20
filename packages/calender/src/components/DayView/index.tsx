@@ -3,14 +3,15 @@ import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
-import { getTimes, getReturnTime } from '@/utils/time';
+import { getTimes, getReturnTime, format } from '@/utils/time';
 import { setElementStyle, getTransform, numToPx } from '@/utils/dom';
 import Header from './Header';
 import TimeContent from './TimeContent';
 import TimeLine from './TimeLine';
 import TimeIndicateLine from './TimeIndicateLine';
 import type { DateRange } from '@/types/schedule';
-import type { DayViewProps, RenderTime, Rect } from '@wcalender/types/DayView';
+import type { RenderTime, Rect } from '@wcalender/types/DayView';
+import { DayViewProps } from '@/types/components';
 import GirdBox from './GirdBox';
 import useData from './hooks/useData';
 import useElementBounding from '@/hooks/useResize';
@@ -93,7 +94,9 @@ function DayView(props: DayViewProps) {
    */
   const dragTime = useMemo(() => {
     if (isUndef(dragConfig)) return null;
-    return dragConfig.data.start.time.format('YYYY-MM-DD HH:mm');
+    let start = format(dragConfig.data.start, 'YYYY-MM-DD HH:mm');
+    let end = format(dragConfig.data.end, 'YYYY-MM-DD HH:mm');
+    return { start, end };
   }, [dragConfig]);
 
   useEffect(() => {
@@ -102,7 +105,8 @@ function DayView(props: DayViewProps) {
   }, [props.date, props.data]);
 
   /**
-   * @zh 初始化bus事件
+   * @zh bus 手势事件监听
+   * @en init bus event
    */
   let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
   useBusListener({
@@ -162,6 +166,10 @@ function DayView(props: DayViewProps) {
   });
 
   /**
+   * @zh 数据更新事件
+   */
+
+  /**
    * @zh 拖拽样式
    */
   function DragBlock({ layout, children }: { layout: Rect; children?: ComponentChildren }) {
@@ -188,7 +196,9 @@ function DayView(props: DayViewProps) {
                   colH={colH}
                   interval={interval}
                 >
-                  <TimeContent title={item.title} />
+                  <TimeContent
+                    title={`${item.title}-${format(item.start, 'HH:mm')}:${format(item.end, 'HH:mm')}`}
+                  />
                 </GirdBox>
               ))
             )}
@@ -196,7 +206,9 @@ function DayView(props: DayViewProps) {
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
             {dragConfig && (
               <DragBlock layout={dragConfig.rect}>
-                {dragTime}
+                <div style={{ position: 'absolute', right: '0px' }}>
+                  {dragTime?.start}-{dragTime?.end}
+                </div>
                 <TimeContent title={dragConfig.data.title} />
               </DragBlock>
             )}

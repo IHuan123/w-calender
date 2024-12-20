@@ -87,3 +87,14 @@ export function isCrossoverTime(
 ): boolean {
   return !(o[0].time.isAfter(t[1].time) || o[1].time.isBefore(t[0].time));
 }
+
+/**
+ * @zh 时间格式化
+ * @en date format
+ * @param time
+ * @param template
+ * @returns
+ */
+export function format(time: ReturnTimeValue, template: string) {
+  return time.time.format(template);
+}
