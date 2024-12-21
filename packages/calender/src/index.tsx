@@ -62,23 +62,11 @@ class ChCalender {
     this.setOptions(options);
     this.render();
   }
-  render() {
-    render(
-      <RenderContent
-        viewType={this.options.viewType}
-        data={this.options.data}
-        date={getDate(this.options.date as Date)}
-        onUpdate={(e) => {
-          console.log(e);
-          this.onUpdate();
-        }}
-      />,
-      this.el
-    );
-  }
+
+  // 处理数据成合适格式
 
   // 加载数据
-  data(data: ScheduleData) {
+  loadData(data: ScheduleData) {
     this.options.data = data;
   }
   // 设置配置
@@ -95,8 +83,24 @@ class ChCalender {
   onUnmount() {
     // 组件卸载
   }
-  onUpdate() {
+  onChange() {
     // 数据更新
+  }
+
+  // 渲染组件
+  render() {
+    render(
+      <RenderContent
+        viewType={this.options.viewType}
+        data={this.options.data}
+        date={getDate(this.options.date as Date)}
+        onChange={(e) => {
+          console.log(e);
+          this.onChange();
+        }}
+      />,
+      this.el
+    );
   }
 }
 

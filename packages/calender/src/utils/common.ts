@@ -34,7 +34,7 @@ export function deepClone<T>(target: T): T {
 
   for (const key in target) {
     if (target.hasOwnProperty(key)) {
-      target[key] = deepClone(target[key]);
+      targetObj[key] = deepClone(target[key]);
     }
   }
 

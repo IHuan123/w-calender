@@ -1,4 +1,4 @@
-import { ScheduleItem } from './schedule';
+import { RenderTime } from './DayView';
 export interface EventsProps {
-  onUpdate(e: { data: ScheduleItem }): void;
+  onChange(e: { data: RenderTime }): void;
 }

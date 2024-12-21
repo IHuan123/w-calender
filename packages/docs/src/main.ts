@@ -69,8 +69,6 @@ function main() {
   let context = new ChCalender(document.getElementById('root')!, options);
 
   // 渲染数据
-  function renderData() {
-    context.data([]);
-  }
+  function renderData() {}
 }
 main();

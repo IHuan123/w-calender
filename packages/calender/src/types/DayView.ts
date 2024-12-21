@@ -31,7 +31,13 @@ export type Rect = {
 export interface GridBoxProps extends Rect {
   className?: string;
   children?: ComponentChildren;
-  data?: RenderTime;
+  data: RenderTime;
   colH?: number;
   interval?: number;
+  onMoveStart?(event: any, data: RenderTime, rect: Rect): void;
+  onMove?(event: any, data: RenderTime, rect: Rect): void;
+  onMoveEnd?(event: any, data: RenderTime, rect: Rect): void;
+  onResizeStart?(event: any, data: RenderTime, rect: Rect): void;
+  onResize?(event: any, data: RenderTime, rect: Rect): void;
+  onResizeEnd?(event: any, data: RenderTime, rect: Rect): void;
 }

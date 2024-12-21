@@ -3,15 +3,6 @@ import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
 import type { GridBoxProps } from '@wcalender/types/DayView';
 import useInteract from '@/hooks/useInteract';
-import {
-  DRAG_END,
-  DRAG_MOVE,
-  DRAG_START,
-  RESIZE_END,
-  RESIZE_MOVE,
-  RESIZE_START,
-} from '@/constant/busEventName';
-import bus from '@/utils/bus';
 import { genStyles } from '../_utils';
 import './style/timeContent.scss';
 
@@ -41,6 +32,12 @@ export default function ScheduleCard({
   data,
   colH = 0,
   interval = 1,
+  onMove,
+  onMoveStart,
+  onMoveEnd,
+  onResize,
+  onResizeStart,
+  onResizeEnd,
 }: GridBoxProps) {
   let position = { x, y };
   const gridBox = useRef<HTMLDivElement>(null);
@@ -56,7 +53,6 @@ export default function ScheduleCard({
   useEffect(() => {
     const cardStyle = genStyles({ x, y, h: h, w: w });
     setStyleConfig(cardStyle);
-
     position = { x, y };
   }, [w, h, x, y]);
 
@@ -65,17 +61,17 @@ export default function ScheduleCard({
       autoScroll: true,
       listeners: {
         start(event) {
-          bus.$emit(DRAG_START, event, data, { w: '100%', h, ...position });
+          onMoveStart?.(event, data, { w: '100%', h, ...position });
           setDragState(true);
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
           if (dy) {
-            bus.$emit(DRAG_MOVE, { ...event, dy: dy }, data);
+            onMove?.({ ...event, dy: dy }, data, { w: '100%', h, ...position });
           }
         },
         end(event) {
-          bus.$emit(DRAG_END, event, data);
+          onMoveEnd?.(event, data, { w: '100%', h, ...position });
           setDragState(false);
         },
       },
@@ -84,16 +80,16 @@ export default function ScheduleCard({
       edges: { top: false, left: false, bottom: true, right: false },
       listeners: {
         start(event) {
-          bus.$emit(RESIZE_START, event, data, { w: '100%', h, ...position });
+          onResizeStart?.(event, data, { w: '100%', h, ...position });
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
           if (dy) {
-            bus.$emit(RESIZE_MOVE, { ...event, dy: dy }, data);
+            onResize?.({ ...event, dy: dy }, data, { w: '100%', h, ...position });
           }
         },
         end(event) {
-          bus.$emit(RESIZE_END, event, data);
+          onResizeEnd?.(event, data, { w: '100%', h, ...position });
         },
       },
     },

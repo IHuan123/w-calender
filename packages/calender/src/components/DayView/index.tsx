@@ -16,18 +16,10 @@ import GirdBox from './GirdBox';
 import useData from './hooks/useData';
 import useElementBounding from '@/hooks/useResize';
 import dayjs, { Dayjs } from 'dayjs';
-import {
-  DRAG_START,
-  DRAG_MOVE,
-  DRAG_END,
-  RESIZE_START,
-  RESIZE_MOVE,
-  RESIZE_END,
-} from '@/constant/busEventName';
 import './style/index.scss';
-import useBusListener from '@/hooks/useBusListener';
 import { genStyles } from '../_utils';
 import { isUndef } from '@/utils/is';
+import { deepClone } from '@/utils/common';
 
 const colH = 42;
 const interval = 30;
@@ -79,10 +71,12 @@ function calculateRect(
   return { x, y, w, h };
 }
 
+type DragConfig = { rect: Rect; data: RenderTime } | null;
 function DayView(props: DayViewProps) {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useState<TimeList>([]);
-  const [dragConfig, setDragConf] = useState<{ rect: Rect; data: RenderTime } | null>(null);
+  let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
+  const [dragConfig, setDragConf] = useState<DragConfig>(null);
   const containerSize = useElementBounding(scrollContainer);
 
   const { todayData, renderData } = useData({
@@ -108,67 +102,60 @@ function DayView(props: DayViewProps) {
    * @zh bus 手势事件监听
    * @en init bus event
    */
-  let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
-  useBusListener({
-    [DRAG_START]: (e: any, data: RenderTime, rect: Rect) => {
-      setDragConf({ rect: { ...rect }, data });
-      position = { ...rect };
-    },
-    [DRAG_MOVE]: (event, data: RenderTime) => {
-      position.y += event.dy;
-      let dragEl = document.querySelector(`.${cls('drag-block')}`);
-      if (dragEl) {
-        setElementStyle(
-          dragEl as HTMLElement,
-          getTransform({
-            width: '100%',
-            height: numToPx(position.h),
-            left: numToPx(position.x),
-            top: numToPx(position.y),
-          })
-        );
-      }
-      let dragData = { ...data };
-      dragData.start = getReturnTime(
-        dayjs()
-          .startOf('day')
-          .add(offsetToTimeValue(position.y + 21), 'second')
-      );
-      dragData.end = getReturnTime(
-        dayjs()
-          .startOf('day')
-          .add(offsetToTimeValue(position.y + position.h), 'second')
-      );
-      setDragConf({
-        rect: position,
-        data: dragData,
-      });
-    },
-    [DRAG_END]: () => {
-      setDragConf(null);
-    },
-    [RESIZE_START]: (e: any, data: RenderTime, rect: Rect) => {
-      setDragConf({ rect, data });
-      position = rect;
-    },
-    [RESIZE_MOVE]: (event) => {
-      let dragEl = document.querySelector(`.${cls('drag-block')}`);
-      if (dragEl) {
-        setElementStyle(dragEl as HTMLElement, {
+
+  function onMoveStart(event: any, data: RenderTime, rect: Rect) {
+    setDragConf({ rect: deepClone(rect), data });
+    position = deepClone(rect);
+  }
+  function onMove(event: any, data: RenderTime, rect: Rect) {
+    position.y += event.dy;
+    let dragEl = document.querySelector(`.${cls('drag-block')}`);
+    if (dragEl) {
+      setElementStyle(
+        dragEl as HTMLElement,
+        getTransform({
           width: '100%',
-          height: numToPx(event.rect.height),
-        });
-      }
-    },
-    [RESIZE_END]: () => {
-      setDragConf(null);
-    },
-  });
+          height: numToPx(position.h),
+          left: numToPx(position.x),
+          top: numToPx(position.y),
+        })
+      );
+    }
+    let dragData = { ...data };
+    dragData.start = getReturnTime(
+      dayjs().startOf('day').add(offsetToTimeValue(position.y), 'second')
+    );
+    dragData.end = getReturnTime(
+      dayjs()
+        .startOf('day')
+        .add(offsetToTimeValue(position.y + position.h), 'second')
+    );
+    setDragConf({
+      rect: position,
+      data: dragData,
+    });
+  }
+  function onResizeStart(event: any, data: RenderTime, rect: Rect) {
+    setDragConf({ rect, data });
+    position = deepClone(rect);
+  }
+  function onResize(event: any, data: RenderTime, rect: Rect) {
+    let dragEl = document.querySelector(`.${cls('drag-block')}`);
+    if (dragEl) {
+      setElementStyle(dragEl as HTMLElement, {
+        width: '100%',
+        height: numToPx(event.rect.height),
+      });
+    }
+  }
 
   /**
    * @zh 数据更新事件
    */
-
+  async function onChange(event: any, data: RenderTime) {
+    props.onChange({ data });
+    setDragConf(null);
+  }
   /**
    * @zh 拖拽样式
    */
@@ -195,6 +182,12 @@ function DayView(props: DayViewProps) {
                   data={item}
                   colH={colH}
                   interval={interval}
+                  onMoveStart={onMoveStart}
+                  onMove={onMove}
+                  onMoveEnd={onChange}
+                  onResizeStart={onResizeStart}
+                  onResizeEnd={onChange}
+                  onResize={onResize}
                 >
                   <TimeContent
                     title={`${item.title}-${format(item.start, 'HH:mm')}:${format(item.end, 'HH:mm')}`}
@@ -206,10 +199,7 @@ function DayView(props: DayViewProps) {
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
             {dragConfig && (
               <DragBlock layout={dragConfig.rect}>
-                <div style={{ position: 'absolute', right: '0px' }}>
-                  {dragTime?.start}-{dragTime?.end}
-                </div>
-                <TimeContent title={dragConfig.data.title} />
+                <TimeContent title={dragTime?.start + ':' + dragTime?.end} />
               </DragBlock>
             )}
           </div>
