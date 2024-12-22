@@ -62,7 +62,7 @@ export function getTimes(
 }
 
 /**
- * @zh 通过一个时间获取给时间的开始时间和结束时间
+ * @zh 通过一个时间获取该时间的开始时间和结束时间
  */
 export function getTimeStartAndEnd(
   time: TimeValue,

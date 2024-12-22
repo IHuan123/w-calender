@@ -1,6 +1,4 @@
-import { defineConfig, InlineConfig, mergeConfig } from 'vite';
-import viteCalenderBase from './vite.calender.base';
-// import path from 'path';
+import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [],
   mode: 'development',

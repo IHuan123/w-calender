@@ -78,7 +78,6 @@ function DayView(props: DayViewProps) {
   let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
   const [dragConfig, setDragConf] = useState<DragConfig>(null);
   const containerSize = useElementBounding(scrollContainer);
-
   const { todayData, renderData } = useData({
     data: props.data,
   });

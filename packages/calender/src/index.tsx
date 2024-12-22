@@ -8,7 +8,7 @@ import { getReturnTime, getTimeStartAndEnd } from '@/utils/time';
 import { isArray } from '@/utils/is';
 import { UnitType } from 'dayjs';
 import { DayViewProps } from '@/types/components';
-
+import { StoreProvider } from './contexts/store';
 const defaultOptions: Required<Options> = {
   date: '',
   data: [],
@@ -37,7 +37,11 @@ interface MonthProps extends DayViewProps {
 
 function RenderContent(props: DayProps | WeekProps | MonthProps) {
   const Component = views[props.viewType];
-  return <Component {...props} />;
+  return (
+    <StoreProvider store={{}}>
+      <Component {...props} />
+    </StoreProvider>
+  );
 }
 
 /**

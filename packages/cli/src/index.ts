@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import fs from 'fs-extra';
 import path from 'path';
 import viteDocsDev from './scripts/dev-docs';
+import viteDocsBuild from './scripts/build-docs';
 import viteCalenderDev from './scripts/dev-calender';
 import viteCalenderBuild from './scripts/build-calender';
 
@@ -19,6 +20,12 @@ program
   .action(async (args) => {
     viteDocsDev();
   });
+program
+  .command('docs-build')
+  .description('docs build production')
+  .action(async (args) => {
+    viteDocsBuild();
+  });
 
 program
   .command('calender-server')
@@ -29,7 +36,7 @@ program
 
 program
   .command('calender-build')
-  .description('lib build')
+  .description('lib build components')
   .action(async (args) => {
     viteCalenderBuild();
   });
