@@ -1,4 +1,4 @@
 import { RenderTime } from './DayView';
 export interface EventsProps {
-  onChange(e: { data: RenderTime }): void;
+  onChange(e: { target: RenderTime }): void;
 }

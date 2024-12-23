@@ -1,5 +1,5 @@
 import { ComponentChildren } from 'preact';
-import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'preact/hooks';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
@@ -78,7 +78,7 @@ function DayView(props: DayViewProps) {
   let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
   const [dragConfig, setDragConf] = useState<DragConfig>(null);
   const containerSize = useElementBounding(scrollContainer);
-  const { todayData, renderData } = useData({
+  const { todayData, renderData, calenderData, setCalenderData } = useData({
     data: props.data,
   });
 
@@ -98,14 +98,16 @@ function DayView(props: DayViewProps) {
   }, [props.date, props.data]);
 
   /**
-   * @zh bus 手势事件监听
-   * @en init bus event
+   * @zh 开始移动
    */
-
   function onMoveStart(event: any, data: RenderTime, rect: Rect) {
     setDragConf({ rect: deepClone(rect), data });
     position = deepClone(rect);
   }
+
+  /**
+   * @zh 移动中
+   */
   function onMove(event: any, data: RenderTime, rect: Rect) {
     position.y += event.dy;
     let dragEl = document.querySelector(`.${cls('drag-block')}`);
@@ -134,10 +136,14 @@ function DayView(props: DayViewProps) {
       data: dragData,
     });
   }
+  /**
+   * @zh resize start
+   */
   function onResizeStart(event: any, data: RenderTime, rect: Rect) {
     setDragConf({ rect, data });
     position = deepClone(rect);
   }
+
   function onResize(event: any, data: RenderTime, rect: Rect) {
     let dragEl = document.querySelector(`.${cls('drag-block')}`);
     if (dragEl) {
@@ -152,9 +158,22 @@ function DayView(props: DayViewProps) {
    * @zh 数据更新事件
    */
   async function onChange(event: any, data: RenderTime) {
-    props.onChange({ data });
+    updateData(data);
     setDragConf(null);
   }
+
+  /**
+   * @zh 更新数据
+   */
+  function updateData(target: RenderTime) {
+    let data = [...calenderData];
+    let index = data.findIndex((item) => (item._key = target._key));
+    data[index] = target;
+    setCalenderData(data);
+    console.log(dragConfig);
+    props.onChange({ target: target });
+  }
+
   /**
    * @zh 拖拽样式
    */
@@ -174,22 +193,27 @@ function DayView(props: DayViewProps) {
           <TimeLine data={timeList} />
           <div className={cls('day-grid-layout')} ref={scrollContainer}>
             {renderData?.map((group) =>
-              group.data.map((item) => (
+              group.data.map(({ colIndex, ...config }) => (
                 <GirdBox
-                  {...calculateRect(item, group.totalColumn, colH, containerSize.width)}
-                  key={item._key}
-                  data={item}
+                  {...calculateRect(
+                    { ...config, colIndex },
+                    group.totalColumn,
+                    colH,
+                    containerSize.width
+                  )}
+                  key={config._key}
+                  data={config}
                   colH={colH}
                   interval={interval}
                   onMoveStart={onMoveStart}
                   onMove={onMove}
-                  onMoveEnd={onChange}
+                  onMoveEnd={(event: any, data: RenderTime) => onChange(event, data)}
                   onResizeStart={onResizeStart}
                   onResizeEnd={onChange}
                   onResize={onResize}
                 >
                   <TimeContent
-                    title={`${item.title}-${format(item.start, 'HH:mm')}:${format(item.end, 'HH:mm')}`}
+                    title={`${config.title}-${format(config.start, 'HH:mm')}:${format(config.end, 'HH:mm')}`}
                   />
                 </GirdBox>
               ))

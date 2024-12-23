@@ -46,7 +46,7 @@ export default function ScheduleCard({
     genStyles({ ...position, h: h, w: w })
   );
   const getDy = getMoveDy();
-
+  const [count, setCount] = useState(0);
   const dragStepNum = useMemo(() => {
     return (colH / interval) * 15;
   }, [colH, interval]);
@@ -66,6 +66,7 @@ export default function ScheduleCard({
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
+
           if (dy) {
             onMove?.({ ...event, dy: dy }, data, { w: '100%', h, ...position });
           }
@@ -100,6 +101,9 @@ export default function ScheduleCard({
       className={`${className ?? ''} ${cls(['grid-box', 'grid-content'])}`}
       style={{ ...styleConfig, opacity: isDrag ? 0.7 : 1 }}
       ref={gridBox}
+      onClick={() => {
+        console.log(count);
+      }}
     >
       {children}
     </div>

@@ -122,24 +122,26 @@ function handleGridCols(data: Array<RenderTime>) {
 }
 
 export default function useData({ data }: { data: ScheduleData }) {
-  const [list, setList] = useState<Array<RenderTime>>([]);
+  const [calenderData, setData] = useState<Array<RenderTime>>([]);
 
   // 头部列表渲染
   const todayData = useMemo(() => {
-    return list?.filter((item) => item.type === 'day') ?? [];
-  }, [list]);
+    return calenderData?.filter((item) => item.type === 'day') ?? [];
+  }, [calenderData]);
 
   // 列表布局中数据
   const renderData = useMemo(() => {
-    return handleGridCols(list?.filter((item) => item.type === 'time') ?? []);
-  }, [list]);
+    return handleGridCols(calenderData?.filter((item) => item.type === 'time') ?? []);
+  }, [calenderData]);
 
   useEffect(() => {
-    setList(getData(data));
+    setData(getData(data));
   }, [data]);
 
   return {
     todayData,
     renderData,
+    calenderData,
+    setCalenderData: setData,
   };
 }
