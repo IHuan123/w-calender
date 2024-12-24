@@ -1,5 +1,5 @@
 import { ComponentChildren } from 'preact';
-import { useEffect, useState, useRef, useMemo, useCallback } from 'preact/hooks';
+import { forwardRef, useEffect, useState, useRef, useMemo, ForwardFn } from 'preact/compat';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
@@ -76,8 +76,11 @@ function DayView(props: DayViewProps) {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useState<TimeList>([]);
   let position: Rect = { x: 0, y: 0, w: 0, h: 0 };
+  const dragBlockRef = useRef<HTMLDivElement>(null);
   const [dragConfig, setDragConf] = useState<DragConfig>(null);
   const containerSize = useElementBounding(scrollContainer);
+
+  // 这里的数据需统一使用store存储
   const { todayData, renderData, calenderData, setCalenderData } = useData({
     data: props.data,
   });
@@ -136,6 +139,11 @@ function DayView(props: DayViewProps) {
       data: dragData,
     });
   }
+
+  function onMoveEnd(event: any, data: RenderTime) {
+    dragBlockRef.current?.click();
+    setDragConf(null);
+  }
   /**
    * @zh resize start
    */
@@ -155,11 +163,18 @@ function DayView(props: DayViewProps) {
   }
 
   /**
+   * @zh
+   */
+  function onResizeEnd(event: any, data: RenderTime) {
+    dragBlockRef.current?.click();
+    setDragConf(null);
+  }
+
+  /**
    * @zh 数据更新事件
    */
-  async function onChange(event: any, data: RenderTime) {
+  async function onChange(data: RenderTime) {
     updateData(data);
-    setDragConf(null);
   }
 
   /**
@@ -170,20 +185,27 @@ function DayView(props: DayViewProps) {
     let index = data.findIndex((item) => (item._key = target._key));
     data[index] = target;
     setCalenderData(data);
-    console.log(dragConfig);
     props.onChange({ target: target });
   }
 
   /**
    * @zh 拖拽样式
    */
-  function DragBlock({ layout, children }: { layout: Rect; children?: ComponentChildren }) {
+  const DragBlock = forwardRef<
+    HTMLDivElement,
+    { layout: Rect; children?: ComponentChildren; onTrigger?: Function }
+  >(({ layout, onTrigger, children }, ref) => {
     return (
-      <div className={cls('drag-block')} style={genStyles(layout)}>
+      <div
+        className={cls('drag-block')}
+        style={genStyles(layout)}
+        ref={ref}
+        onClick={() => onTrigger?.()}
+      >
         {children}
       </div>
     );
-  }
+  });
 
   return (
     <div className={cls('day')}>
@@ -207,9 +229,9 @@ function DayView(props: DayViewProps) {
                   interval={interval}
                   onMoveStart={onMoveStart}
                   onMove={onMove}
-                  onMoveEnd={(event: any, data: RenderTime) => onChange(event, data)}
+                  onMoveEnd={onMoveEnd}
                   onResizeStart={onResizeStart}
-                  onResizeEnd={onChange}
+                  onResizeEnd={onResizeEnd}
                   onResize={onResize}
                 >
                   <TimeContent
@@ -221,7 +243,13 @@ function DayView(props: DayViewProps) {
 
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
             {dragConfig && (
-              <DragBlock layout={dragConfig.rect}>
+              <DragBlock
+                layout={dragConfig.rect}
+                ref={dragBlockRef}
+                onTrigger={() => {
+                  onChange(dragConfig.data);
+                }}
+              >
                 <TimeContent title={dragTime?.start + ':' + dragTime?.end} />
               </DragBlock>
             )}

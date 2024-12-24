@@ -39,21 +39,16 @@ export default function ScheduleCard({
   onResizeStart,
   onResizeEnd,
 }: GridBoxProps) {
-  let position = { x, y };
   const gridBox = useRef<HTMLDivElement>(null);
   const [isDrag, setDragState] = useState(false);
-  const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties>(
-    genStyles({ ...position, h: h, w: w })
-  );
+  const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties | null>(null);
   const getDy = getMoveDy();
-  const [count, setCount] = useState(0);
   const dragStepNum = useMemo(() => {
     return (colH / interval) * 15;
   }, [colH, interval]);
+
   useEffect(() => {
-    const cardStyle = genStyles({ x, y, h: h, w: w });
-    setStyleConfig(cardStyle);
-    position = { x, y };
+    setStyleConfig(() => genStyles({ x, y, h: h, w: w }));
   }, [w, h, x, y]);
 
   useInteract(gridBox, void 0, {
@@ -61,18 +56,17 @@ export default function ScheduleCard({
       autoScroll: true,
       listeners: {
         start(event) {
-          onMoveStart?.(event, data, { w: '100%', h, ...position });
+          onMoveStart?.(event, data, { w: '100%', h, x, y });
           setDragState(true);
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
-
           if (dy) {
-            onMove?.({ ...event, dy: dy }, data, { w: '100%', h, ...position });
+            onMove?.({ ...event, dy: dy }, data, { w: '100%', h, x, y });
           }
         },
         end(event) {
-          onMoveEnd?.(event, data, { w: '100%', h, ...position });
+          onMoveEnd?.(event, data, { w: '100%', h, x, y });
           setDragState(false);
         },
       },
@@ -81,16 +75,16 @@ export default function ScheduleCard({
       edges: { top: false, left: false, bottom: true, right: false },
       listeners: {
         start(event) {
-          onResizeStart?.(event, data, { w: '100%', h, ...position });
+          onResizeStart?.(event, data, { w: '100%', h, x, y });
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
           if (dy) {
-            onResize?.({ ...event, dy: dy }, data, { w: '100%', h, ...position });
+            onResize?.({ ...event, dy: dy }, data, { w: '100%', h, x, y });
           }
         },
         end(event) {
-          onResizeEnd?.(event, data, { w: '100%', h, ...position });
+          onResizeEnd?.(event, data, { w: '100%', h, x, y });
         },
       },
     },
@@ -101,9 +95,6 @@ export default function ScheduleCard({
       className={`${className ?? ''} ${cls(['grid-box', 'grid-content'])}`}
       style={{ ...styleConfig, opacity: isDrag ? 0.7 : 1 }}
       ref={gridBox}
-      onClick={() => {
-        console.log(count);
-      }}
     >
       {children}
     </div>
