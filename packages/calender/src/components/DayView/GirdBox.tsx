@@ -1,8 +1,9 @@
 import { h } from 'preact';
 import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
+import { getAttrsTransformTranslate } from '@/utils/dom';
 import type { GridBoxProps } from '@wcalender/types/DayView';
-import useInteract from '@/hooks/useInteract';
+import useInteract, { InteractEventOptions } from '@/hooks/useInteract';
 import { genStyles } from '../_utils';
 import './style/timeContent.scss';
 
@@ -20,6 +21,15 @@ function getMoveDy() {
   };
 
   return getDy;
+}
+
+/**
+ * @zh 获取拖动触发元素信息
+ */
+function getEleLayout(el: HTMLElement) {
+  let posi = getAttrsTransformTranslate(el);
+  let { width, height } = el.getBoundingClientRect();
+  return { ...posi, w: width, h: height };
 }
 
 export default function ScheduleCard({
@@ -40,7 +50,7 @@ export default function ScheduleCard({
   onResizeEnd,
 }: GridBoxProps) {
   const gridBox = useRef<HTMLDivElement>(null);
-  const [isDrag, setDragState] = useState(false);
+  const [isEdit, setDragState] = useState(false);
   const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties | null>(null);
   const getDy = getMoveDy();
   const dragStepNum = useMemo(() => {
@@ -51,22 +61,25 @@ export default function ScheduleCard({
     setStyleConfig(() => genStyles({ x, y, h: h, w: w }));
   }, [w, h, x, y]);
 
-  useInteract(gridBox, void 0, {
+  const options: InteractEventOptions = {
     draggableEvents: {
-      autoScroll: true,
+      autoScroll: false,
       listeners: {
         start(event) {
-          onMoveStart?.(event, data, { w: '100%', h, x, y });
+          let rect = getEleLayout(event.target);
+          onMoveStart?.(event, data, rect);
           setDragState(true);
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
           if (dy) {
-            onMove?.({ ...event, dy: dy }, data, { w: '100%', h, x, y });
+            let rect = getEleLayout(event.target);
+            onMove?.({ ...event, dy: dy }, data, rect);
           }
         },
         end(event) {
-          onMoveEnd?.(event, data, { w: '100%', h, x, y });
+          let rect = getEleLayout(event.target);
+          onMoveEnd?.(event, data, rect);
           setDragState(false);
         },
       },
@@ -75,25 +88,31 @@ export default function ScheduleCard({
       edges: { top: false, left: false, bottom: true, right: false },
       listeners: {
         start(event) {
-          onResizeStart?.(event, data, { w: '100%', h, x, y });
+          let rect = getEleLayout(event.target);
+          onResizeStart?.(event, data, rect);
+          setDragState(true);
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
           if (dy) {
-            onResize?.({ ...event, dy: dy }, data, { w: '100%', h, x, y });
+            let rect = getEleLayout(event.target);
+            onResize?.({ ...event, dy: dy }, data, rect);
           }
         },
         end(event) {
-          onResizeEnd?.(event, data, { w: '100%', h, x, y });
+          let rect = getEleLayout(event.target);
+          onResizeEnd?.(event, data, rect);
+          setDragState(false);
         },
       },
     },
-  });
+  };
+  useInteract(gridBox, void 0, options);
 
   return (
     <div
       className={`${className ?? ''} ${cls(['grid-box', 'grid-content'])}`}
-      style={{ ...styleConfig, opacity: isDrag ? 0.7 : 1 }}
+      style={{ ...styleConfig, opacity: isEdit ? 0.7 : 1 }}
       ref={gridBox}
     >
       {children}

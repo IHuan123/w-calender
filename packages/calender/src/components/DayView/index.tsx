@@ -1,5 +1,5 @@
 import { ComponentChildren } from 'preact';
-import { forwardRef, useEffect, useState, useRef, useMemo, ForwardFn } from 'preact/compat';
+import { forwardRef, useEffect, useState, useRef, useMemo } from 'preact/compat';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
@@ -19,7 +19,6 @@ import dayjs, { Dayjs } from 'dayjs';
 import './style/index.scss';
 import { genStyles } from '../_utils';
 import { isUndef } from '@/utils/is';
-import { deepClone } from '@/utils/common';
 
 const colH = 42;
 const interval = 30;
@@ -104,8 +103,8 @@ function DayView(props: DayViewProps) {
    * @zh 开始移动
    */
   function onMoveStart(event: any, data: RenderTime, rect: Rect) {
-    setDragConf({ rect: deepClone(rect), data });
-    position = deepClone(rect);
+    setDragConf({ rect: { ...position, w: '100%', x: 0 }, data });
+    position = rect;
   }
 
   /**
@@ -120,24 +119,12 @@ function DayView(props: DayViewProps) {
         getTransform({
           width: '100%',
           height: numToPx(position.h),
-          left: numToPx(position.x),
+          left: numToPx(0),
           top: numToPx(position.y),
         })
       );
     }
-    let dragData = { ...data };
-    dragData.start = getReturnTime(
-      dayjs().startOf('day').add(offsetToTimeValue(position.y), 'second')
-    );
-    dragData.end = getReturnTime(
-      dayjs()
-        .startOf('day')
-        .add(offsetToTimeValue(position.y + position.h), 'second')
-    );
-    setDragConf({
-      rect: position,
-      data: dragData,
-    });
+    handleUpdateData(event, data);
   }
 
   function onMoveEnd(event: any, data: RenderTime) {
@@ -149,7 +136,7 @@ function DayView(props: DayViewProps) {
    */
   function onResizeStart(event: any, data: RenderTime, rect: Rect) {
     setDragConf({ rect, data });
-    position = deepClone(rect);
+    position = { ...rect };
   }
 
   function onResize(event: any, data: RenderTime, rect: Rect) {
@@ -160,14 +147,33 @@ function DayView(props: DayViewProps) {
         height: numToPx(event.rect.height),
       });
     }
+    handleUpdateData(event, data);
   }
-
   /**
-   * @zh
+   * @zh 容器大小变更事件
    */
   function onResizeEnd(event: any, data: RenderTime) {
     dragBlockRef.current?.click();
     setDragConf(null);
+  }
+
+  /**
+   * @zh 处理数据
+   */
+  function handleUpdateData(event: any, data: RenderTime) {
+    let dragData = { ...data };
+    dragData.start = getReturnTime(
+      dayjs().startOf('day').add(offsetToTimeValue(position.y), 'second')
+    );
+    dragData.end = getReturnTime(
+      dayjs()
+        .startOf('day')
+        .add(offsetToTimeValue(position.y + event.rect.height), 'second')
+    );
+    setDragConf({
+      rect: { y: position.y, w: '100%', x: 0, h: event.rect.height },
+      data: dragData,
+    });
   }
 
   /**
@@ -182,10 +188,10 @@ function DayView(props: DayViewProps) {
    */
   function updateData(target: RenderTime) {
     let data = [...calenderData];
-    let index = data.findIndex((item) => (item._key = target._key));
+    let index = data.findIndex((item) => item._key === target._key);
     data[index] = target;
-    setCalenderData(data);
-    props.onChange({ target: target });
+    setCalenderData(() => data);
+    props.onChange({ target: target, data });
   }
 
   /**
@@ -206,6 +212,11 @@ function DayView(props: DayViewProps) {
       </div>
     );
   });
+
+  /**
+   * @zh 添加时间段
+   */
+  function add() {}
 
   return (
     <div className={cls('day')}>
@@ -234,6 +245,7 @@ function DayView(props: DayViewProps) {
                   onResizeEnd={onResizeEnd}
                   onResize={onResize}
                 >
+                  {/* 自定义日程卡片，需支持自定义 */}
                   <TimeContent
                     title={`${config.title}-${format(config.start, 'HH:mm')}:${format(config.end, 'HH:mm')}`}
                   />
@@ -250,7 +262,10 @@ function DayView(props: DayViewProps) {
                   onChange(dragConfig.data);
                 }}
               >
-                <TimeContent title={dragTime?.start + ':' + dragTime?.end} />
+                <div style="background: red; height: 100%">
+                  {/* 这里拖动时显示组件,需支持自定义 */}
+                  {dragTime?.start + ':' + dragTime?.end}
+                </div>
               </DragBlock>
             )}
           </div>

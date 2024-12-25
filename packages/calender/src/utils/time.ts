@@ -2,7 +2,9 @@ import dayjs, { UnitType } from 'dayjs';
 import type { TimeValue, ReturnTimeValue, TimeList } from '@wcalender/types/time';
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 dayjs.extend(quarterOfYear);
 /**
  * @zh 格式化时间格式
@@ -85,7 +87,7 @@ export function isCrossoverTime(
   o: [ReturnTimeValue, ReturnTimeValue],
   t: [ReturnTimeValue, ReturnTimeValue]
 ): boolean {
-  return !(o[0].time.isAfter(t[1].time) || o[1].time.isBefore(t[0].time));
+  return !(o[0].time.isSameOrAfter(t[1].time) || o[1].time.isSameOrBefore(t[0].time));
 }
 
 /**

@@ -10,11 +10,6 @@ import { isEmpty } from '@/utils/is';
  * @zh 处理data数据，数据存在交叉时进行等比排布
  */
 function getData(data: ScheduleData): Array<RenderTime> {
-  // 按时间进行排序
-  data = data.sort((a, b) => {
-    return dayjs(a.start).isBefore(b.start) ? -1 : 1;
-  });
-
   return data.map((item) => {
     let start = getReturnTime(item.start),
       end = getReturnTime(item.end);
@@ -75,6 +70,10 @@ function getDataColIdx(
  * @zh 处理数据
  */
 function handleGridCols(data: Array<RenderTime>) {
+  // 按时间进行排序
+  data = data.sort((a, b) => {
+    return dayjs(a.start.time).isBefore(b.start.time) ? -1 : 1;
+  });
   let groups: Array<{
     totalColumn: number;
     data: CalculateRectReturn;

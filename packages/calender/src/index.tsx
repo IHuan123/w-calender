@@ -9,10 +9,12 @@ import { isArray } from '@/utils/is';
 import { UnitType } from 'dayjs';
 import { DayViewProps } from '@/types/components';
 import { StoreProvider } from './contexts/store';
+
 const defaultOptions: Required<Options> = {
   date: '',
   data: [],
   viewType: 'D',
+  templates: {},
 };
 const views: Record<ViewType, FunctionComponent<any>> = {
   day: DayView,
@@ -48,7 +50,6 @@ function RenderContent(props: DayProps | WeekProps | MonthProps) {
  * @zh 处理时间
  */
 function getDate(date: Date, type?: timeType): DateRange {
-  let res = [];
   if (isArray(date)) {
     let [start, end] = date;
     let startTime = getReturnTime(start);

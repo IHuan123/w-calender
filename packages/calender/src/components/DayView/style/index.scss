@@ -97,6 +97,7 @@ $border: 1px solid $color-border-2;
 
 @include cls('grid-box') {
   position: absolute;
+  width: 100%;
 }
 
 // 时间线
