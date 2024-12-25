@@ -1,12 +1,14 @@
 import { RefObject } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import { elementResizeObserver } from '@/utils/resizeObserver';
+import { useXState } from './';
 
 export default function useElementBounding(
   el: RefObject<HTMLElement>,
   callback?: (e: { width: number; height: number }) => void
 ) {
-  let [size, setSize] = useState({ width: 0, height: 0 });
+  const [size, setSize, getSize] = useXState({ width: 0, height: 0 });
+
   let ctx: ReturnType<typeof elementResizeObserver> | null = null;
   useEffect(() => {
     if (el) {
@@ -20,5 +22,8 @@ export default function useElementBounding(
       ctx?.disconnect();
     };
   }, [el]);
-  return size;
+  return {
+    size,
+    getSize,
+  };
 }

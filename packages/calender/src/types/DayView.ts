@@ -40,4 +40,5 @@ export interface GridBoxProps extends Rect {
   onResizeStart?(event: any, data: RenderTime, rect: Rect): void;
   onResize?(event: any, data: RenderTime, rect: Rect): void;
   onResizeEnd?(event: any, data: RenderTime, rect: Rect): void;
+  onTap?(event: any, data: RenderTime, rect: Rect): void;
 }

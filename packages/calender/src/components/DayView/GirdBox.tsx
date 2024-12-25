@@ -48,6 +48,7 @@ export default function ScheduleCard({
   onResize,
   onResizeStart,
   onResizeEnd,
+  onTap,
 }: GridBoxProps) {
   const gridBox = useRef<HTMLDivElement>(null);
   const [isEdit, setDragState] = useState(false);
@@ -107,7 +108,11 @@ export default function ScheduleCard({
       },
     },
   };
-  useInteract(gridBox, void 0, options);
+  useInteract(gridBox, void 0, options, (ctx) => {
+    ctx.on('tap', function (e) {
+      console.log('tap', e);
+    });
+  });
 
   return (
     <div

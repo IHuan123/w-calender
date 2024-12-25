@@ -1,7 +1,8 @@
-import { RefObject } from 'preact';
+import { RefObject, useRef, useEffect } from 'preact/compat';
+
 import interact from 'interactjs';
 import type { Options, Target, Listeners, Interactable, EdgeOptions } from '@interactjs/types';
-import { useEffect } from 'preact/hooks';
+
 import { unref } from '@/utils/common';
 import { isUndef } from '@/utils/is';
 export interface InteractEventOptions {
@@ -17,9 +18,10 @@ type UseInteractTarget = Target | RefObject<Target>;
 export default function useInteract(
   target: UseInteractTarget,
   options?: Options,
-  eventOptions?: InteractEventOptions
+  eventOptions?: InteractEventOptions,
+  callback?: (ctx: Interactable) => void
 ) {
-  let interactCtx: Interactable | null = null;
+  let interactCtx = useRef<Interactable | null>(null);
 
   // 初始化事件
   function initEvent(ctx: Interactable, eventOptions: InteractEventOptions) {
@@ -37,17 +39,18 @@ export default function useInteract(
   useEffect(() => {
     let el = unref<Target>(target);
     if (el) {
-      interactCtx = interact(el, options);
+      interactCtx.current = interact(el, options);
       if (eventOptions) {
-        initEvent(interactCtx, eventOptions);
+        initEvent(interactCtx.current, eventOptions);
       }
+      callback?.(interactCtx.current);
     }
 
     return () => {
-      interactCtx = null;
+      interactCtx.current = null;
     };
   }, [target, options]);
   return {
-    context: interactCtx,
+    getContext: () => interactCtx.current,
   };
 }
