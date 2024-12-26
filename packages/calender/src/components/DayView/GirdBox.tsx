@@ -4,24 +4,8 @@ import { cls } from '@/utils/css';
 import { getAttrsTransformTranslate } from '@/utils/dom';
 import type { GridBoxProps } from '@wcalender/types/DayView';
 import useInteract, { InteractEventOptions } from '@/hooks/useInteract';
-import { genStyles } from '../_utils';
+import { genStyles, getMoveDy } from '../_utils';
 import './style/timeContent.scss';
-
-// 记录拖拽距离，大于15单位距离才触发事件
-function getMoveDy() {
-  let historyDy = 0;
-  let getDy: Function | null = (dy: number, threshold: number): number | boolean => {
-    historyDy += dy;
-    if (Math.abs(historyDy) > threshold) {
-      let returnDy = historyDy;
-      historyDy = 0;
-      return returnDy > 0 ? threshold : -threshold;
-    }
-    return false;
-  };
-
-  return getDy;
-}
 
 /**
  * @zh 获取拖动触发元素信息
@@ -109,8 +93,10 @@ export default function ScheduleCard({
     },
   };
   useInteract(gridBox, void 0, options, (ctx) => {
-    ctx.on('tap', function (e) {
-      console.log('tap', e);
+    ctx.on('tap', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      onTap?.(event, data, { x, y, w, h });
     });
   });
 
@@ -119,6 +105,7 @@ export default function ScheduleCard({
       className={`${className ?? ''} ${cls(['grid-box', 'grid-content'])}`}
       style={{ ...styleConfig, opacity: isEdit ? 0.7 : 1 }}
       ref={gridBox}
+      onClick={() => {}}
     >
       {children}
     </div>

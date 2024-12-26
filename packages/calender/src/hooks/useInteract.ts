@@ -49,7 +49,7 @@ export default function useInteract(
     return () => {
       interactCtx.current = null;
     };
-  }, [target, options]);
+  }, [target]);
   return {
     getContext: () => interactCtx.current,
   };

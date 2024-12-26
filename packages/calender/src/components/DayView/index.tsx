@@ -19,6 +19,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import './style/index.scss';
 import { genStyles } from '../_utils';
 import { isUndef } from '@/utils/is';
+import useInteract from '@/hooks/useInteract';
 
 const colH = 42;
 const interval = 30;
@@ -75,9 +76,8 @@ function DayView(props: DayViewProps) {
   const scrollContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useXState<TimeList>([]);
   let dragPosition: Rect = { x: 0, y: 0, w: '100%', h: 0 };
-  const dragBlockRef = useRef<HTMLDivElement>(null);
   const [dragConfig, setDragConf, getDragState] = useXState<DragConfig>(null);
-  const { size: containerSize, getSize } = useElementBounding(scrollContainer);
+  const { rect: containerRect, getRect } = useElementBounding(scrollContainer);
 
   // 这里的数据需统一使用store存储
   const { todayData, renderData, calenderData, setCalenderData } = useData({
@@ -116,7 +116,7 @@ function DayView(props: DayViewProps) {
     if (dragPosition.y < 0) {
       dragPosition.y = 0;
     }
-    let size = getSize();
+    let size = getRect();
 
     if (dragPosition.y + dragPosition.h >= size.height) {
       dragPosition.y = size.height - dragPosition.h;
@@ -221,8 +221,36 @@ function DayView(props: DayViewProps) {
   /**
    * @zh 添加时间段
    */
-  function onClickGridLayout(e: any) {
-    console.log(e);
+  // const {} = useXState()
+  const [addConfig, setAddConf, getAddState] = useXState<DragConfig>(null);
+  let isTapContainerEle = useRef(false);
+
+  useInteract(scrollContainer, void 0, void 0, function (ctx) {
+    ctx.on('down', function (event) {
+      isTapContainerEle.current = event.interactable.target === event.originalEvent.target;
+      if (isTapContainerEle.current) {
+        console.log('onClickGridLayout down', event, getRect());
+      }
+    });
+    ctx.on('move', function (event) {
+      if (isTapContainerEle.current) {
+        // console.log('onClickGridLayout move', event);
+      }
+    });
+    ctx.on('up', function (event) {
+      if (isTapContainerEle.current) {
+        // console.log('onClickGridLayout up', event);
+        isTapContainerEle.current = false;
+      }
+    });
+  });
+
+  function AddEventComponent({ layout, children }: { layout: Rect; children?: ComponentChildren }) {
+    return (
+      <div className={cls('add-component')} style={genStyles(layout)}>
+        {children}
+      </div>
+    );
   }
 
   /**
@@ -235,11 +263,7 @@ function DayView(props: DayViewProps) {
       <Scrollbar hideBar className={cls('grid-scrollbar')}>
         <div className={cls('day-grid')} style={{ '--col-h': colH + 'px' }}>
           <TimeLine data={timeList} />
-          <div
-            className={cls('day-grid-layout')}
-            ref={scrollContainer}
-            onMouseDown={onClickGridLayout}
-          >
+          <div className={cls('day-grid-layout')} ref={scrollContainer}>
             {renderData?.map((group) =>
               group.data.map(({ colIndex, ...config }) => (
                 <GirdBox
@@ -247,7 +271,7 @@ function DayView(props: DayViewProps) {
                     { ...config, colIndex },
                     group.totalColumn,
                     colH,
-                    containerSize.width
+                    containerRect.width
                   )}
                   key={config._key}
                   data={config}
@@ -271,12 +295,20 @@ function DayView(props: DayViewProps) {
 
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
             {dragConfig && (
-              <DragBlock layout={dragConfig.rect} ref={dragBlockRef}>
+              <DragBlock layout={dragConfig.rect}>
                 <div style="background: red; height: 100%">
                   {/* 这里拖动时显示组件,需支持自定义 */}
                   {dragTime?.start + ':' + dragTime?.end}
                 </div>
               </DragBlock>
+            )}
+            {addConfig && (
+              <AddEventComponent layout={addConfig.rect}>
+                <div style="background: red; height: 100%">
+                  {/* 这里拖动时显示组件,需支持自定义 */}
+                  添加的内容
+                </div>
+              </AddEventComponent>
             )}
           </div>
         </div>
