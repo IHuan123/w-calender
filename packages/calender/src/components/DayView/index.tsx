@@ -23,7 +23,7 @@ import useInteract from '@/hooks/useInteract';
 
 const colH = 42;
 const interval = 30;
-const gap = 8;
+// const gap = 8;
 /**
  * @zh 获取时间列表
  */
@@ -220,6 +220,7 @@ function DayView(props: DayViewProps) {
 
   /**
    * @zh 添加时间段
+   * 这里需要做添加元素的resize操作
    */
   // const {} = useXState()
   const [addConfig, setAddConf, getAddState] = useXState<DragConfig>(null);
@@ -234,12 +235,10 @@ function DayView(props: DayViewProps) {
     });
     ctx.on('move', function (event) {
       if (isTapContainerEle.current) {
-        // console.log('onClickGridLayout move', event);
       }
     });
     ctx.on('up', function (event) {
       if (isTapContainerEle.current) {
-        // console.log('onClickGridLayout up', event);
         isTapContainerEle.current = false;
       }
     });
