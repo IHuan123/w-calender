@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo } from 'preact/hooks';
+import { useEffect, useMemo } from 'preact/hooks';
 import dayjs from 'dayjs';
 import type { ScheduleData } from '@/types/schedule';
 import type { RenderTime } from '@wcalender/types/DayView';
 import { getReturnTime, isCrossoverTime } from '@/utils/time';
 import { createUniqueId, arrayGroupByValue } from '@/utils/common';
 import { isEmpty } from '@/utils/is';
+import { useXState } from '@/hooks';
 
 /**
  * @zh 处理data数据，数据存在交叉时进行等比排布
@@ -121,7 +122,7 @@ function handleGridCols(data: Array<RenderTime>) {
 }
 
 export default function useData({ data }: { data: ScheduleData }) {
-  const [calenderData, setData] = useState<Array<RenderTime>>([]);
+  const [calenderData, setData, getCalenderData] = useXState<Array<RenderTime>>([]);
 
   // 头部列表渲染
   const todayData = useMemo(() => {
@@ -142,5 +143,6 @@ export default function useData({ data }: { data: ScheduleData }) {
     renderData,
     calenderData,
     setCalenderData: setData,
+    getCalenderData,
   };
 }

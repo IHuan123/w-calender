@@ -2,9 +2,10 @@ import { h } from 'preact';
 import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
 import { getAttrsTransformTranslate } from '@/utils/dom';
+import { getMoveDy } from '@/utils/common';
 import type { GridBoxProps } from '@wcalender/types/DayView';
 import useInteract, { InteractEventOptions } from '@/hooks/useInteract';
-import { genStyles, getMoveDy } from '../_utils';
+import { genStyles } from '../_utils';
 import './style/timeContent.scss';
 
 /**
@@ -15,7 +16,7 @@ function getEleLayout(el: HTMLElement) {
   let { width, height } = el.getBoundingClientRect();
   return { ...posi, w: width, h: height };
 }
-
+const getDy = getMoveDy();
 export default function ScheduleCard({
   w,
   h,
@@ -37,7 +38,7 @@ export default function ScheduleCard({
   const gridBox = useRef<HTMLDivElement>(null);
   const [isEdit, setDragState] = useState(false);
   const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties | null>(null);
-  const getDy = getMoveDy();
+
   const dragStepNum = useMemo(() => {
     return (colH / interval) * 15;
   }, [colH, interval]);

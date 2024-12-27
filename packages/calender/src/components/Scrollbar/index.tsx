@@ -2,18 +2,26 @@ import { cls } from '../../utils/css';
 import { ComponentChildren, h } from 'preact';
 import { useCallback } from 'preact/hooks';
 import './index.scss';
+
 export interface ScrollbarProps {
   children: ComponentChildren;
   className?: string;
   style?: h.JSX.CSSProperties;
   hideBar?: Boolean;
-  onScroll?: (e: Event) => void;
+  onScroll?: (e: {
+    event?: Event;
+    scroll: { scrollHeight: number; scrollLeft: number; scrollTop: number; scrollWidth: number };
+  }) => void;
 }
 export default function (props: ScrollbarProps) {
   const onScroll = useCallback(
     (e: Event) => {
       if (typeof props.onScroll === 'function') {
-        props.onScroll(e);
+        let { scrollHeight, scrollLeft, scrollTop, scrollWidth } = e.target as Element;
+        props.onScroll({
+          event: e,
+          scroll: { scrollHeight, scrollLeft, scrollTop, scrollWidth },
+        });
       }
     },
     [props.onScroll]

@@ -72,3 +72,22 @@ export function unref<T>(target: T | RefObject<T>): T | null {
     return target;
   }
 }
+
+/**
+ * @zh 记录拖拽距离，大于threshold单位距离才触发事件
+ * @returns
+ */
+export function getMoveDy() {
+  let historyDy = 0;
+  let getDy = (dy: number, threshold: number): number | false => {
+    historyDy += dy;
+    if (Math.abs(historyDy) > threshold) {
+      let returnDy = historyDy;
+      historyDy = 0;
+      return returnDy > 0 ? threshold : -threshold;
+    }
+    return false;
+  };
+
+  return getDy;
+}
