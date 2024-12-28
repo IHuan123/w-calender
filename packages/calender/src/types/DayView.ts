@@ -1,17 +1,8 @@
 import { ComponentChildren } from 'preact';
-import { ReturnTimeValue } from '@wcalender/types/time';
-import type { timeType } from '@/types/schedule';
-
-export type RenderTime = {
-  title: string;
-  start: ReturnTimeValue;
-  end: ReturnTimeValue;
-  type: timeType;
-  _key: string;
-};
+import { CalenderItem } from './options';
 
 export interface HeaderProps {
-  data: Array<RenderTime>;
+  data: Array<CalenderItem>;
 }
 
 export interface ScheduleCardProps {
@@ -31,14 +22,14 @@ export type Rect = {
 export interface GridBoxProps extends Rect {
   className?: string;
   children?: ComponentChildren;
-  data: RenderTime;
+  data: CalenderItem;
   colH?: number;
   interval?: number;
-  onMoveStart?(event: any, data: RenderTime, rect: Rect): void;
-  onMove?(event: any, data: RenderTime, rect: Rect): void;
-  onMoveEnd?(event: any, data: RenderTime, rect: Rect): void;
-  onResizeStart?(event: any, data: RenderTime, rect: Rect): void;
-  onResize?(event: any, data: RenderTime, rect: Rect): void;
-  onResizeEnd?(event: any, data: RenderTime, rect: Rect): void;
-  onTap?(event: any, data: RenderTime, rect: Rect): void;
+  onMoveStart?(event: any, data: CalenderItem, rect: Rect): void;
+  onMove?(event: any, data: CalenderItem, rect: Rect): void;
+  onMoveEnd?(event: any, data: CalenderItem, rect: Rect): void;
+  onResizeStart?(event: any, data: CalenderItem, rect: Rect): void;
+  onResize?(event: any, data: CalenderItem, rect: Rect): void;
+  onResizeEnd?(event: any, data: CalenderItem, rect: Rect): void;
+  onTap?(event: any, data: CalenderItem, rect: Rect): void;
 }

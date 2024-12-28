@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'preact/hooks';
 import dayjs from 'dayjs';
 import type { ScheduleData } from '@/types/schedule';
-import type { RenderTime } from '@wcalender/types/DayView';
+import type { CalenderItem } from '@wcalender/types/options';
 import { getReturnTime, isCrossoverTime } from '@/utils/time';
 import { createUniqueId, arrayGroupByValue } from '@/utils/common';
 import { isEmpty } from '@/utils/is';
@@ -10,7 +10,7 @@ import { useXState } from '@/hooks';
 /**
  * @zh 处理data数据，数据存在交叉时进行等比排布
  */
-function getData(data: ScheduleData): Array<RenderTime> {
+function getData(data: ScheduleData): Array<CalenderItem> {
   return data.map((item) => {
     let start = getReturnTime(item.start),
       end = getReturnTime(item.end);
@@ -31,7 +31,7 @@ function getData(data: ScheduleData): Array<RenderTime> {
  * @en Layout configuration
  */
 type CalculateRectReturn = Array<
-  RenderTime & {
+  CalenderItem & {
     colIndex: number;
   }
 >;
@@ -40,7 +40,7 @@ type CalculateRectReturn = Array<
  * 获取data column index
  */
 function getDataColIdx(
-  item: RenderTime,
+  item: CalenderItem,
   group: {
     totalColumn: number;
     data: CalculateRectReturn;
@@ -70,7 +70,7 @@ function getDataColIdx(
 /**
  * @zh 处理数据
  */
-function handleGridCols(data: Array<RenderTime>) {
+function handleGridCols(data: Array<CalenderItem>) {
   // 按时间进行排序
   data = data.sort((a, b) => {
     return dayjs(a.start.time).isBefore(b.start.time) ? -1 : 1;
@@ -81,7 +81,7 @@ function handleGridCols(data: Array<RenderTime>) {
   }> = [];
   data.map((item) => {
     // 获取配置
-    const getConfig = (item: RenderTime, colIndex: number = 0) => {
+    const getConfig = (item: CalenderItem, colIndex: number = 0) => {
       return {
         ...item,
         colIndex: colIndex,
@@ -122,7 +122,7 @@ function handleGridCols(data: Array<RenderTime>) {
 }
 
 export default function useData({ data }: { data: ScheduleData }) {
-  const [calenderData, setData, getCalenderData] = useXState<Array<RenderTime>>([]);
+  const [calenderData, setData, getCalenderData] = useXState<Array<CalenderItem>>([]);
 
   // 头部列表渲染
   const todayData = useMemo(() => {

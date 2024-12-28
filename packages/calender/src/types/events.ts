@@ -1,4 +1,4 @@
-import { RenderTime } from './DayView';
+import { CalenderItem } from './options';
 export interface EventsProps {
-  onChange(e: { target: RenderTime; data: RenderTime[] }): void;
+  onChange(e: { target: CalenderItem; data: CalenderItem[] }): void;
 }

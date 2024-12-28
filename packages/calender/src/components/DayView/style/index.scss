@@ -79,7 +79,6 @@ $border: 1px solid $color-border-2;
   background: rgb($gray-6...);
   margin-top: 4px;
   border-radius: 4px;
-  @include vertical-decorate-line(rgb($primary-3...));
 
   box-sizing: border-box;
   &:first-of-type {

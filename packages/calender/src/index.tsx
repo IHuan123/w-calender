@@ -1,6 +1,6 @@
 import { render, FunctionComponent } from 'preact';
 import { DayView, WeekView, MonthView } from '@/components';
-import { Options } from '@/types/options';
+import { Options, CalenderItem } from '@/types/options';
 import { Date } from '@/types/common';
 import { ViewType } from '@/types/options';
 import type { ScheduleData, ScheduleItem, DateRange, timeType } from '@/types/schedule';
@@ -62,6 +62,7 @@ function getDate(date: Date, type?: timeType): DateRange {
 class ChCalender {
   el: HTMLElement;
   options: Options = defaultOptions;
+  data: CalenderItem[] = [];
   constructor(el: HTMLElement, options: Partial<Options>) {
     this.el = el;
     this.setOptions(options);
