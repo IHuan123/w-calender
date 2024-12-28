@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
 import { getAttrsTransformTranslate } from '@/utils/dom';
 import { getMoveDistance } from '@/utils/common';
-import type { GridBoxProps } from '@wcalender/types/DayView';
+import type { GridBoxProps, OperateType } from '@wcalender/types/components';
 import useInteract, { InteractEventOptions } from '@/hooks/useInteract';
 import { genStyles } from '../_utils';
 import './style/timeContent.scss';
@@ -36,7 +36,7 @@ export default function ScheduleCard({
   onTap,
 }: GridBoxProps) {
   const gridBox = useRef<HTMLDivElement>(null);
-  const [isEdit, setDragState] = useState(false);
+  const [editType, setDragState] = useState<OperateType | false>(false);
   const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties | null>(null);
 
   const dragStepNum = useMemo(() => {
@@ -54,7 +54,7 @@ export default function ScheduleCard({
         start(event) {
           let rect = getEleLayout(event.target);
           onMoveStart?.(event, data, rect);
-          setDragState(true);
+          setDragState('move');
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
@@ -76,7 +76,7 @@ export default function ScheduleCard({
         start(event) {
           let rect = getEleLayout(event.target);
           onResizeStart?.(event, data, rect);
-          setDragState(true);
+          setDragState('resize');
         },
         move(event) {
           let dy = getDy(event.dy, dragStepNum);
@@ -104,7 +104,10 @@ export default function ScheduleCard({
   return (
     <div
       className={`${className ?? ''} ${cls(['grid-box', 'grid-content'])}`}
-      style={{ ...styleConfig, opacity: isEdit ? 0.7 : 1 }}
+      style={{
+        ...styleConfig,
+        opacity: editType ? { resize: 0, move: 0.7, add: 0 }[editType as OperateType] : 1,
+      }}
       ref={gridBox}
       onClick={() => {}}
     >

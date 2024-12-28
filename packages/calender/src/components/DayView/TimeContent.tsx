@@ -1,6 +1,6 @@
 import { cls } from '@/utils/css';
 
-import type { ScheduleCardProps } from '@wcalender/types/DayView';
+import type { ScheduleCardProps } from '@wcalender/types/components';
 import './style/timeContent.scss';
 
 /**

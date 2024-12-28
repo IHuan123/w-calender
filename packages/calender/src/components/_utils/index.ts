@@ -1,7 +1,7 @@
 import { h } from 'preact';
-import type { Rect } from '@wcalender/types/DayView';
-import { getTransform, numToPx } from '@/utils/dom';
-
+import type { Rect } from '@wcalender/types/components';
+import type { DateRange } from '@/types/schedule';
+import { getTransform, numToPx, getTimes } from '@/utils';
 /**
  * @zh 生成样式
  */
@@ -13,4 +13,16 @@ export function genStyles({ x, y, h, w }: Rect): h.JSX.CSSProperties {
     height: numToPx(h),
   }) as h.JSX.CSSProperties;
   return style;
+}
+/**
+ * @zh 获取时间列表
+ */
+export function getTimeList(date: DateRange, interval: number) {
+  if (!date) {
+    return [];
+  }
+  const [start, end] = date;
+  const startTime = start.time.startOf('day'),
+    endTime = end.time.endOf('day');
+  return getTimes(startTime, endTime, interval, 'minute');
 }

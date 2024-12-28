@@ -1,14 +1,17 @@
-import { render, FunctionComponent } from 'preact';
+import { render, FunctionComponent, useEffect } from 'preact/compat';
 import { DayView, WeekView, MonthView } from '@/components';
-import { Options, CalenderItem } from '@/types/options';
-import { Date } from '@/types/common';
-import { ViewType } from '@/types/options';
-import type { ScheduleData, ScheduleItem, DateRange, timeType } from '@/types/schedule';
 import { getReturnTime, getTimeStartAndEnd } from '@/utils/time';
+import { createUniqueId } from '@/utils/common';
 import { isArray } from '@/utils/is';
-import { UnitType } from 'dayjs';
-import { DayViewProps } from '@/types/components';
-import { StoreProvider } from './contexts/store';
+import { StoreProvider } from './contexts/calenderStore';
+import { useXState } from '@/hooks';
+
+import type { UnitType } from 'dayjs';
+import type { DayViewProps } from '@/types/components';
+import type { Options, CalenderItem } from '@/types/options';
+import type { Date } from '@/types/common';
+import type { ViewType } from '@/types/options';
+import type { ScheduleData, ScheduleItem, DateRange, timeType } from '@/types/schedule';
 
 const defaultOptions: Required<Options> = {
   date: '',
@@ -38,10 +41,14 @@ interface MonthProps extends DayViewProps {
 }
 
 function RenderContent(props: DayProps | WeekProps | MonthProps) {
+  const [store, setStore, getStore] = useXState({ data: props.data });
+  useEffect(() => {
+    setStore({ ...store, data: props.data });
+  }, [props.data]);
   const Component = views[props.viewType];
   return (
-    <StoreProvider store={{}}>
-      <Component {...props} />
+    <StoreProvider store={store}>
+      <Component date={props.date} onChange={props.onChange} />
     </StoreProvider>
   );
 }
@@ -59,6 +66,27 @@ function getDate(date: Date, type?: timeType): DateRange {
   return getTimeStartAndEnd(date, { day: 'D', time: 'h' }[type ?? 'day'] as UnitType);
 }
 
+/**
+ * @zh 处理data数据，数据存在交叉时进行等比排布
+ */
+function getData(data: ScheduleData): Array<CalenderItem> {
+  return data.map((item) => {
+    let start = getReturnTime(item.start),
+      end = getReturnTime(item.end);
+
+    let config = {
+      title: item.title,
+      start: start,
+      end: end,
+      type: item.type,
+      _key: createUniqueId(),
+      _raw: item,
+    };
+
+    return config;
+  });
+}
+
 class ChCalender {
   el: HTMLElement;
   options: Options = defaultOptions;
@@ -69,15 +97,23 @@ class ChCalender {
     this.render();
   }
 
-  // 处理数据成合适格式
-
+  // 处理数据格式
+  private formatData(data: ScheduleData) {
+    this.data = getData(data);
+  }
   // 加载数据
   loadData(data: ScheduleData) {
     this.options.data = data;
+    this.formatData(data);
   }
   // 设置配置
   setOptions(options: Partial<Options>) {
     this.options = { ...defaultOptions, ...options };
+    this.formatData(this.options.data);
+  }
+  // 更新视图
+  update() {
+    this.render();
   }
 
   /**
@@ -98,7 +134,7 @@ class ChCalender {
     render(
       <RenderContent
         viewType={this.options.viewType}
-        data={this.options.data}
+        data={this.data}
         date={getDate(this.options.date as Date)}
         onChange={(e) => {
           console.log(e);

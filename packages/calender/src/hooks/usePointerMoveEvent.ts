@@ -1,7 +1,7 @@
 import { useRef, RefObject } from 'preact/compat';
 import useInteract, { UseInteractTarget } from '@/hooks/useInteract';
 
-import { isUndef } from '@/utils/is';
+import { isUndef } from '@/utils';
 
 export type ScrollParent = Element | RefObject<Element>;
 export type UsePointerMoveEventOptions = {

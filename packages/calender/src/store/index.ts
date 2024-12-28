@@ -1,6 +1,6 @@
 import { PropsWithChildren } from '@/types/common';
-import { InternalStoreAPI } from '@/types/store';
-import { createContext, createElement, Context } from 'preact';
+import { StateWithActions } from '@/types/store';
+import { createContext, createElement, useRef } from 'preact/compat';
 import { useContext, useEffect, useLayoutEffect, useMemo } from 'preact/hooks';
 import { isUndef } from '@/utils/is';
 
@@ -9,28 +9,43 @@ const useIsomorphicLayoutEffect = isSSR ? useEffect : useLayoutEffect;
 /**
  * @zh 数据共享
  */
-export function createStore<State>() {
-  const StoreContext = createContext<InternalStoreAPI<State> | null>(null);
+export function createStore<State extends StateWithActions>() {
+  const StoreContext = createContext<State | null>(null);
 
   // 共享顶级组件
-  function StoreProvider({
-    children,
-    store,
-  }: PropsWithChildren<{ store: InternalStoreAPI<State> }>) {
+  function StoreProvider({ children, store }: PropsWithChildren<{ store: State }>) {
     return createElement(StoreContext.Provider, { value: store, children });
   }
+
+  // 设置数据
+  function setStore(store: State) {}
+
   // hooks
   function useStore() {
-    useIsomorphicLayoutEffect(() => {});
+    const storeCtx = useContext(StoreContext);
+    const state = useRef<State>(storeCtx);
+
+    useIsomorphicLayoutEffect(() => {
+      state.current = storeCtx;
+    });
     // store 操作
-    function getItem() {}
-    function setItem() {}
+    function getState(key: string) {
+      if (state.current) {
+        return state.current[key];
+      }
+      return null;
+    }
+    function setState(key: keyof State, data: any) {
+      if (!isUndef(state.current) && typeof state.current === 'object') {
+        state.current[key] = data;
+      }
+    }
     function clear() {}
     function removeItem() {}
 
     return {
-      getItem,
-      setItem,
+      getState,
+      setState,
       clear,
       removeItem,
     };
@@ -53,5 +68,6 @@ export function createStore<State>() {
     StoreProvider,
     useStore,
     useInternalStore,
+    setStore,
   };
 }

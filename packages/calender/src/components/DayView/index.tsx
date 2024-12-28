@@ -1,43 +1,38 @@
+import './style/index.scss';
 import { ComponentChildren } from 'preact';
 import { forwardRef, useEffect, useRef, useMemo } from 'preact/compat';
 import { TimeList } from '@wcalender/types/time';
 import Scrollbar from '../Scrollbar';
-import { cls } from '@/utils/css';
-import { getTimes, getReturnTime, format } from '@/utils/time';
-import { setElementStyle, getTransform, numToPx } from '@/utils/dom';
-import { createUniqueId, getMoveDistance } from '@/utils/common';
 import Header from './Header';
-import TimeContent from './TimeContent';
 import TimeLine from './TimeLine';
 import TimeIndicateLine from './TimeIndicateLine';
 import { DayViewProps } from '@/types/components';
 import EventComponent from './EventComponent';
 import useData from './hooks/useData';
-import { useElementBounding, useXState, useInteract, usePointerMoveEvent } from '@/hooks';
+import { useElementBounding, useXState, usePointerMoveEvent } from '@/hooks';
 import dayjs, { Dayjs } from 'dayjs';
-import './style/index.scss';
-import { genStyles } from '../_utils';
-import { isEmpty, isUndef } from '@/utils/is';
+import { useStore } from '@/contexts/calenderStore';
 
-import type { DateRange } from '@/types/schedule';
+import { genStyles, getTimeList } from '../_utils';
+import {
+  createUniqueId,
+  getMoveDistance,
+  setElementStyle,
+  getTransform,
+  numToPx,
+  getReturnTime,
+  format,
+  cls,
+  isEmpty,
+  isUndef,
+} from '@/utils';
+
 import type { CalenderItem } from '@wcalender/types/options';
-import type { Rect, OperateType } from '@wcalender/types/DayView';
+import type { Rect, OperateType } from '@wcalender/types/components';
 
 const colH = 42;
 const interval = 30;
-// const gap = 8;
-/**
- * @zh 获取时间列表
- */
-function getTimeList(date: DateRange) {
-  if (!date) {
-    return [];
-  }
-  const [start, end] = date;
-  const startTime = start.time.startOf('day'),
-    endTime = end.time.endOf('day');
-  return getTimes(startTime, endTime, interval, 'minute');
-}
+const gap = 8;
 
 /**
  * @zh 计算时间Y位置
@@ -82,13 +77,15 @@ function DayView(props: DayViewProps) {
   const [dragConfig, setDragConf, getDragState] = useXState<DragConfig>(null);
   const { rect: containerRect, getRect } = useElementBounding(layoutContainer);
 
+  const { getState } = useStore();
+
   const dragStepNum = useMemo(() => {
     return (colH / interval) * 15;
   }, [colH, interval]);
 
   // 这里的数据需统一使用store存储
   const { todayData, renderData, setCalenderData, getCalenderData } = useData({
-    data: props.data,
+    data: getState('data'),
   });
 
   /**
@@ -102,9 +99,9 @@ function DayView(props: DayViewProps) {
   }, [dragConfig]);
 
   useEffect(() => {
-    let data = getTimeList(props.date);
+    let data = getTimeList(props.date, interval);
     setTimeList(data);
-  }, [props.date, props.data]);
+  }, [props.date]);
 
   /**
    * @zh 开始移动
@@ -275,7 +272,6 @@ function DayView(props: DayViewProps) {
     onUp() {
       let newConfig = getDragState();
       if (newConfig) {
-        console.log('up', newConfig.data);
         updateData(newConfig.data);
       }
 
@@ -326,9 +322,10 @@ function DayView(props: DayViewProps) {
           onTap={onTap}
         >
           {/* 自定义日程卡片，需支持自定义 */}
-          <TimeContent
-            title={`${config.title}-${format(config.start, 'HH:mm')}~${format(config.end, 'HH:mm')}`}
-          />
+
+          <div
+            style={{ width: '100%', height: '100%', background: 'blue' }}
+          >{`${config.title}-${format(config.start, 'HH:mm')}~${format(config.end, 'HH:mm')}`}</div>
         </EventComponent>
       ))
     );

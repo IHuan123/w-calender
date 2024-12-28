@@ -1,32 +1,10 @@
 import { useEffect, useMemo } from 'preact/hooks';
 import dayjs from 'dayjs';
-import type { ScheduleData } from '@/types/schedule';
 import type { CalenderItem } from '@wcalender/types/options';
-import { getReturnTime, isCrossoverTime } from '@/utils/time';
-import { createUniqueId, arrayGroupByValue } from '@/utils/common';
+import { isCrossoverTime } from '@/utils/time';
+import { arrayGroupByValue } from '@/utils/common';
 import { isEmpty } from '@/utils/is';
 import { useXState } from '@/hooks';
-
-/**
- * @zh 处理data数据，数据存在交叉时进行等比排布
- */
-function getData(data: ScheduleData): Array<CalenderItem> {
-  return data.map((item) => {
-    let start = getReturnTime(item.start),
-      end = getReturnTime(item.end);
-
-    let config = {
-      title: item.title,
-      start: start,
-      end: end,
-      type: item.type,
-      _key: createUniqueId(),
-      _raw: item,
-    };
-
-    return config;
-  });
-}
 
 /**
  * @zh 布局配置
@@ -123,7 +101,7 @@ function handleGridCols(data: Array<CalenderItem>) {
   return groups;
 }
 
-export default function useData({ data }: { data: ScheduleData }) {
+export default function useData({ data }: { data: CalenderItem[] }) {
   const [calenderData, setData, getCalenderData] = useXState<Array<CalenderItem>>([]);
 
   // 头部列表渲染
@@ -137,7 +115,7 @@ export default function useData({ data }: { data: ScheduleData }) {
   }, [calenderData]);
 
   useEffect(() => {
-    setData(getData(data));
+    setData(data);
   }, [data]);
 
   return {
