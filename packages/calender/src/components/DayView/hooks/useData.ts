@@ -21,7 +21,9 @@ function getData(data: ScheduleData): Array<CalenderItem> {
       end: end,
       type: item.type,
       _key: createUniqueId(),
+      _raw: item,
     };
+
     return config;
   });
 }

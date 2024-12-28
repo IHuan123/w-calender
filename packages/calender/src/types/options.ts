@@ -1,5 +1,5 @@
 import { VNode } from 'preact';
-import { ScheduleData } from './schedule';
+import { ScheduleData, ScheduleItem } from './schedule';
 import { Date } from './common';
 import { ReturnTimeValue } from '@wcalender/types/time';
 import { timeType } from '@/types/schedule';
@@ -22,4 +22,5 @@ export type CalenderItem = {
   end: ReturnTimeValue;
   type: timeType;
   _key: string;
+  _raw?: ScheduleItem;
 };

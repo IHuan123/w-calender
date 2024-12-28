@@ -7,6 +7,7 @@ export interface ScheduleItem {
   end: string;
   type: timeType;
   title: string;
+  [prop: string]: any;
 }
 
 export type ScheduleData = ScheduleItem[];

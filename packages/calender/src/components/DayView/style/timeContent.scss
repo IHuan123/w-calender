@@ -2,7 +2,6 @@
 // 日程卡片
 @include cls('time-content') {
   background-color: rgb($gray-6...);
-  border-radius: $border-radius-medium;
   box-sizing: border-box;
   box-shadow: $shadow1-center;
   min-height: 24px;

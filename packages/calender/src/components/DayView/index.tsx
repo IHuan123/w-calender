@@ -1,6 +1,3 @@
-/**
- * @TODO 当前组件需优化
- */
 import { ComponentChildren } from 'preact';
 import { forwardRef, useEffect, useRef, useMemo } from 'preact/compat';
 import { TimeList } from '@wcalender/types/time';
@@ -8,22 +5,23 @@ import Scrollbar from '../Scrollbar';
 import { cls } from '@/utils/css';
 import { getTimes, getReturnTime, format } from '@/utils/time';
 import { setElementStyle, getTransform, numToPx } from '@/utils/dom';
-import { createUniqueId, getMoveDy } from '@/utils/common';
+import { createUniqueId, getMoveDistance } from '@/utils/common';
 import Header from './Header';
 import TimeContent from './TimeContent';
 import TimeLine from './TimeLine';
 import TimeIndicateLine from './TimeIndicateLine';
-import type { DateRange } from '@/types/schedule';
-import type { CalenderItem } from '@wcalender/types/options';
-import type { Rect } from '@wcalender/types/DayView';
 import { DayViewProps } from '@/types/components';
 import EventComponent from './EventComponent';
 import useData from './hooks/useData';
-import { useElementBounding, useXState, useInteract } from '@/hooks';
+import { useElementBounding, useXState, useInteract, usePointerMoveEvent } from '@/hooks';
 import dayjs, { Dayjs } from 'dayjs';
 import './style/index.scss';
 import { genStyles } from '../_utils';
 import { isEmpty, isUndef } from '@/utils/is';
+
+import type { DateRange } from '@/types/schedule';
+import type { CalenderItem } from '@wcalender/types/options';
+import type { Rect, OperateType } from '@wcalender/types/DayView';
 
 const colH = 42;
 const interval = 30;
@@ -74,9 +72,9 @@ function calculateRect(
   let h = calculateDistance(start.time, end.time, colHeight);
   return { x, y, w, h };
 }
-const getDy = getMoveDy();
+const getDy = getMoveDistance();
 
-type DragConfig = { rect: Rect; data: CalenderItem } | null;
+type DragConfig = { rect: Rect; data: CalenderItem; type: OperateType } | null;
 function DayView(props: DayViewProps) {
   const layoutContainer = useRef<HTMLDivElement>(null);
   const [timeList, setTimeList] = useXState<TimeList>([]);
@@ -112,7 +110,7 @@ function DayView(props: DayViewProps) {
    * @zh 开始移动
    */
   function onMoveStart(event: any, data: CalenderItem, rect: Rect) {
-    setDragConf({ rect: { ...dragPosition }, data });
+    setDragConf({ rect: { ...dragPosition }, data, type: 'move' });
     dragPosition.y = rect.y;
     dragPosition.h = rect.h;
   }
@@ -142,7 +140,7 @@ function DayView(props: DayViewProps) {
         })
       );
     }
-    handleUpdateData(event, data);
+    handleUpdateData(event, data, 'move');
   }
 
   function onMoveEnd(event: any, data: CalenderItem) {
@@ -154,7 +152,7 @@ function DayView(props: DayViewProps) {
    * @zh resize start
    */
   function onResizeStart(event: any, data: CalenderItem, rect: Rect) {
-    setDragConf({ rect, data });
+    setDragConf({ rect, data, type: 'resize' });
     dragPosition = { ...rect };
   }
 
@@ -167,7 +165,7 @@ function DayView(props: DayViewProps) {
         height: numToPx(Math.max(h, dragStepNum)),
       });
     }
-    handleUpdateData(event, data);
+    handleUpdateData(event, data, 'resize');
   }
   /**
    * @zh 容器大小变更事件
@@ -181,7 +179,7 @@ function DayView(props: DayViewProps) {
   /**
    * @zh 处理数据
    */
-  function handleUpdateData(event: any, data: CalenderItem) {
+  function handleUpdateData(event: any, data: CalenderItem, type: OperateType) {
     let dragData = { ...data };
     dragData.start = getReturnTime(
       props.date[0].time.add(offsetToTimeValue(dragPosition.y), 'second')
@@ -192,6 +190,7 @@ function DayView(props: DayViewProps) {
     setDragConf({
       rect: { y: dragPosition.y, w: '100%', x: 0, h: event.rect.height },
       data: dragData,
+      type: type,
     });
   }
 
@@ -224,58 +223,42 @@ function DayView(props: DayViewProps) {
    * 自动平均对齐刻度
    */
 
-  const [newCalender, setNewCalender, getNewCalender] = useXState<DragConfig>(null);
-  let isTapContainerEle = useRef(false);
-  let prevMoveY = 0,
-    moveDistanceY = 0,
-    scrollTop = useRef(0);
-
-  useInteract(layoutContainer, void 0, void 0, function (ctx) {
-    ctx.on('down', function (event) {
+  let scrollTop = useRef(0);
+  usePointerMoveEvent(layoutContainer, {
+    onDown({ y }) {
       let containerRect = getRect();
-      isTapContainerEle.current = event.interactable.target === event.originalEvent.target;
-      if (isTapContainerEle.current) {
-        const { y } = event;
-        let top = y - containerRect.top + scrollTop.current;
-        prevMoveY = top;
-        setNewCalender({
-          rect: {
-            x: 0,
-            y: top,
-            w: '100%',
-            h: dragStepNum,
-          },
-          data: {
-            title: '添加日程',
-            start: getReturnTime(props.date[0].time.add(offsetToTimeValue(top), 'second')),
-            end: getReturnTime(
-              props.date[0].time.add(offsetToTimeValue(top + dragStepNum), 'second')
-            ),
-            _key: createUniqueId(),
-            type: 'time',
-          },
-        });
-      }
-    });
-    ctx.on('move', function (event) {
-      const { y } = event.originalEvent;
-      let newConfig = getNewCalender();
-
-      if (isTapContainerEle.current && newConfig) {
-        let containerRect = getRect();
-        let top = y - containerRect.top + scrollTop.current;
-        moveDistanceY = top - prevMoveY;
-        prevMoveY = top;
-
-        let dy = getDy(moveDistanceY, dragStepNum);
-        if (dy) {
-          let h = newConfig.rect.h + dy;
+      let top = y - containerRect.top + scrollTop.current;
+      setDragConf({
+        rect: {
+          x: 0,
+          y: top,
+          w: '100%',
+          h: dragStepNum,
+        },
+        data: {
+          title: '添加日程',
+          start: getReturnTime(props.date[0].time.add(offsetToTimeValue(top), 'second')),
+          end: getReturnTime(
+            props.date[0].time.add(offsetToTimeValue(top + dragStepNum), 'second')
+          ),
+          _key: createUniqueId(),
+          type: 'time',
+        },
+        type: 'add',
+      });
+    },
+    onMove({ dy }) {
+      let newConfig = getDragState();
+      if (newConfig) {
+        let distanceY = getDy(dy, dragStepNum);
+        if (distanceY) {
+          let h = newConfig.rect.h + distanceY;
           let rect = {
             ...newConfig.rect,
             h: h,
           };
 
-          setNewCalender({
+          setDragConf({
             rect,
             data: {
               title: newConfig.data.title,
@@ -284,24 +267,21 @@ function DayView(props: DayViewProps) {
               _key: createUniqueId(),
               type: 'time',
             },
+            type: 'add',
           });
         }
       }
-    });
-    ctx.on('up', function (event) {
-      if (isTapContainerEle.current) {
-        let newConfig = getNewCalender();
-        if (newConfig) {
-          updateData(newConfig.data);
-        }
-
-        setNewCalender(null);
-        prevMoveY = 0;
-        isTapContainerEle.current = false;
+    },
+    onUp() {
+      let newConfig = getDragState();
+      if (newConfig) {
+        console.log('up', newConfig.data);
+        updateData(newConfig.data);
       }
-    });
-  });
 
+      setDragConf(null);
+    },
+  });
   /**
    * @zh 点击某个日程
    */
@@ -310,15 +290,20 @@ function DayView(props: DayViewProps) {
   /**
    * @zh 拖拽样式
    */
-  const DragBlock = forwardRef<HTMLDivElement, { layout: Rect; children?: ComponentChildren }>(
-    ({ layout, children }, ref) => {
-      return (
-        <div className={cls('drag-block')} style={genStyles(layout)} ref={ref}>
-          {children}
-        </div>
-      );
-    }
-  );
+  const OperateTime = forwardRef<
+    HTMLDivElement,
+    { layout: Rect; children?: ComponentChildren; type: OperateType }
+  >(({ layout, children, type }, ref) => {
+    return (
+      <div
+        className={cls(['operate-placelholder', `operate-placelholder-${type ?? 'normal'}`])}
+        style={genStyles(layout)}
+        ref={ref}
+      >
+        {children}
+      </div>
+    );
+  });
 
   function renderCalenderLayout() {
     if (isEmpty(renderData)) {
@@ -352,24 +337,15 @@ function DayView(props: DayViewProps) {
   function renderPlaceholder() {
     if (dragConfig) {
       return (
-        <DragBlock layout={dragConfig.rect}>
+        <OperateTime layout={dragConfig.rect} type={dragConfig.type}>
           <div style="background: red; height: 100%">
             {/* 这里拖动时显示组件,需支持自定义 */}
             {dragTime?.start + ':' + dragTime?.end}
           </div>
-        </DragBlock>
+        </OperateTime>
       );
     }
-    if (newCalender) {
-      return (
-        <DragBlock layout={newCalender.rect}>
-          <div style="background: red; height: 100%">
-            {/* 这里拖动时显示组件,需支持自定义 */}
-            添加的内容
-          </div>
-        </DragBlock>
-      );
-    }
+    return null;
   }
 
   return (

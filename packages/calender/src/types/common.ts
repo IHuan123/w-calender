@@ -8,3 +8,5 @@ export interface ChCalenderOptions {
 }
 
 export type PropsWithChildren<Props = {}> = Props & { children?: ComponentChildren };
+
+export type GetDefaultOptions = <T extends object>(defaultOptions: Required<T>) => Required<T>;

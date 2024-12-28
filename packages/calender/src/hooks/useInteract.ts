@@ -10,7 +10,7 @@ export interface InteractEventOptions {
   pointerEvents?: { listeners: Listeners };
   resizeEvents?: { edges?: EdgeOptions; listeners: Listeners };
 }
-type UseInteractTarget = Target | RefObject<Target>;
+export type UseInteractTarget = Target | RefObject<Target>;
 
 /**
  * @zh 手势hooks

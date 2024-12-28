@@ -2,7 +2,7 @@ import { h } from 'preact';
 import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
 import { getAttrsTransformTranslate } from '@/utils/dom';
-import { getMoveDy } from '@/utils/common';
+import { getMoveDistance } from '@/utils/common';
 import type { GridBoxProps } from '@wcalender/types/DayView';
 import useInteract, { InteractEventOptions } from '@/hooks/useInteract';
 import { genStyles } from '../_utils';
@@ -16,7 +16,7 @@ function getEleLayout(el: HTMLElement) {
   let { width, height } = el.getBoundingClientRect();
   return { ...posi, w: width, h: height };
 }
-const getDy = getMoveDy();
+const getDy = getMoveDistance();
 export default function ScheduleCard({
   w,
   h,
