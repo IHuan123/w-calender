@@ -77,7 +77,3 @@
     border-bottom: $transparent-border-style;
   }
 }
-
-@mixin vertical-decorate-line($color, $width: 4px) {
-  border-left: $width solid $color;
-}
