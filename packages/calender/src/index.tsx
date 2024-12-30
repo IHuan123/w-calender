@@ -1,5 +1,7 @@
 import { render, FunctionComponent, useEffect } from 'preact/compat';
 import { DayView, WeekView, MonthView } from '@/components';
+import Column from './components/Column';
+
 import { getReturnTime, getTimeStartAndEnd } from '@/utils/time';
 import { createUniqueId } from '@/utils/common';
 import { isArray } from '@/utils/is';
@@ -142,6 +144,12 @@ class ChCalender {
         }}
       />,
       this.el
+    );
+  }
+  testRender() {
+    render(
+      <Column data={this.data} date={getDate(this.options.date as Date)} cellHeight={42} />,
+      document.querySelector('#calender-column') as Element
     );
   }
 }

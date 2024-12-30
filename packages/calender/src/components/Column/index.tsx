@@ -1,19 +1,6 @@
 import './style/index.scss';
 import { ComponentChildren } from 'preact';
-import { forwardRef, useEffect, useRef, useMemo } from 'preact/compat';
-import { TimeList } from '@wcalender/types/time';
-import Scrollbar from '../Scrollbar';
-import Header from './Header';
-import TimeLine from './TimeLine';
-import TimeIndicateLine from './TimeIndicateLine';
-import { DayViewProps } from '@/types/components';
-import EventComponent from './EventComponent';
-import useData from './hooks/useData';
-import { useElementBounding, useXState, usePointerMoveEvent } from '@/hooks';
-import dayjs, { Dayjs } from 'dayjs';
-import { useStore } from '@/contexts/calenderStore';
-
-import { genStyles, genTimeSlice } from '../_utils';
+import { useMemo, useRef, forwardRef } from 'preact/compat';
 import {
   createUniqueId,
   getMoveDistance,
@@ -26,67 +13,56 @@ import {
   isEmpty,
   isUndef,
 } from '@/utils';
+import { genTimeSlice, calculateRect, offsetToTimeValue, genStyles } from '../_utils';
+import type { CalenderItem } from '@/types/options';
+import type { DateRange } from '@/types/schedule';
+import type { Rect, OperateType } from '@/types/components';
+import type { TimeValue, ReturnTimeValue, TimeList } from '@wcalender/types/time';
+import useColumnLayout from './hooks/useColumnLayout';
+import { useElementBounding, useXState, usePointerMoveEvent } from '@/hooks';
 
-import type { CalenderItem } from '@wcalender/types/options';
-import type { Rect, OperateType } from '@wcalender/types/components';
+import EventLayoutItem from '@/components/Event/EventLayoutItem';
 
-const colH = 42;
-const interval = 30;
-const gap = 8;
-
-/**
- * @zh 计算时间Y位置
- */
-function calculateDistance(start: Dayjs, end: Dayjs, colHeight: number) {
-  let timeValue = end.diff(start, 'second');
-  return (timeValue / (interval * 60)) * colHeight;
+export interface ColumnProps {
+  data: CalenderItem[];
+  date: DateRange;
+  cellHeight?: number;
+  timeInterval?: number;
+  gap?: number;
+  onMoveStart?(event: any, data: CalenderItem, rect: Rect): void;
+  onMove?(event: any, data: CalenderItem, rect: Rect): void;
+  onMoveEnd?(event: any, data: CalenderItem, rect: Rect): void;
+  onResizeStart?(event: any, data: CalenderItem, rect: Rect): void;
+  onResize?(event: any, data: CalenderItem, rect: Rect): void;
+  onResizeEnd?(event: any, data: CalenderItem, rect: Rect): void;
+  onTap?(event: any, data: CalenderItem, rect: Rect): void;
+  onChange?(event: { target: CalenderItem; data: CalenderItem[] }): void;
 }
-
-/**
- * 计算偏移量转换为时间
- */
-function offsetToTimeValue(offset: number) {
-  return (interval / colH) * 60 * offset;
-}
-
-/**
- * @zh 计算y ,h坐标位置信息
- */
-function calculateRect(
-  item: CalenderItem & {
-    colIndex: number;
-  },
-  totalColumn: number,
-  colHeight: number,
-  containerWidth: number
-) {
-  const { start, end, colIndex } = item;
-  let x = (colIndex / totalColumn) * containerWidth;
-  let y = calculateDistance(start.time.startOf('day'), start.time, colHeight);
-  let w = containerWidth / totalColumn;
-  let h = calculateDistance(start.time, end.time, colHeight);
-  return { x, y, w, h };
-}
-const getDy = getMoveDistance();
 
 type DragConfig = { rect: Rect; data: CalenderItem; type: OperateType } | null;
-function DayView(props: DayViewProps) {
+const getDy = getMoveDistance();
+export default function Column({
+  data,
+  date,
+  cellHeight = 42,
+  timeInterval = 30,
+  gap = 0,
+  onChange = () => {},
+}: ColumnProps) {
   const layoutContainer = useRef<HTMLDivElement>(null);
-  const [timeList, setTimeList] = useXState<TimeList>([]);
+  const timeList = useMemo(() => genTimeSlice(date, timeInterval), [date]);
+  const columnHeight = useMemo(() => timeList.length * cellHeight, [timeList]);
   let dragPosition: Rect = { x: 0, y: 0, w: '100%', h: 0 };
   const [dragConfig, setDragConf, getDragState] = useXState<DragConfig>(null);
   const { rect: containerRect, getRect } = useElementBounding(layoutContainer);
-
-  const { getState } = useStore();
+  // 这里的数据需统一使用store存储
+  const { todayData, layoutData, setCalenderData, getCalenderData } = useColumnLayout({
+    data: data,
+  });
 
   const dragStepNum = useMemo(() => {
-    return (colH / interval) * 15;
-  }, [colH, interval]);
-
-  // 这里的数据需统一使用store存储
-  const { todayData, renderData, setCalenderData, getCalenderData } = useData({
-    data: getState('data'),
-  });
+    return (cellHeight / timeInterval) * 15;
+  }, [cellHeight, timeInterval]);
 
   /**
    * 拖动时的时间
@@ -97,11 +73,6 @@ function DayView(props: DayViewProps) {
     let end = format(dragConfig.data.end, 'YYYY-MM-DD HH:mm');
     return { start, end };
   }, [dragConfig]);
-
-  useEffect(() => {
-    let data = genTimeSlice(props.date, interval);
-    setTimeList(data);
-  }, [props.date]);
 
   /**
    * @zh 开始移动
@@ -142,7 +113,7 @@ function DayView(props: DayViewProps) {
 
   function onMoveEnd(event: any, data: CalenderItem) {
     let dragData = getDragState();
-    onChange(dragData?.data as CalenderItem);
+    changeData(dragData?.data as CalenderItem);
     setDragConf(null);
   }
   /**
@@ -169,7 +140,7 @@ function DayView(props: DayViewProps) {
    */
   function onResizeEnd(event: any, data: CalenderItem) {
     let dragData = getDragState();
-    onChange(dragData?.data as CalenderItem);
+    changeData(dragData?.data as CalenderItem);
     setDragConf(null);
   }
 
@@ -179,10 +150,13 @@ function DayView(props: DayViewProps) {
   function handleUpdateData(event: any, data: CalenderItem, type: OperateType) {
     let dragData = { ...data };
     dragData.start = getReturnTime(
-      props.date[0].time.add(offsetToTimeValue(dragPosition.y), 'second')
+      date[0].time.add(offsetToTimeValue(dragPosition.y, timeInterval, cellHeight), 'second')
     );
     dragData.end = getReturnTime(
-      props.date[0].time.add(offsetToTimeValue(dragPosition.y + event.rect.height), 'second')
+      date[0].time.add(
+        offsetToTimeValue(dragPosition.y + event.rect.height, timeInterval, cellHeight),
+        'second'
+      )
     );
     setDragConf({
       rect: { y: dragPosition.y, w: '100%', x: 0, h: event.rect.height },
@@ -194,7 +168,7 @@ function DayView(props: DayViewProps) {
   /**
    * @zh 数据更新事件
    */
-  async function onChange(data: CalenderItem) {
+  async function changeData(data: CalenderItem) {
     updateData(data);
   }
 
@@ -211,8 +185,28 @@ function DayView(props: DayViewProps) {
     }
 
     setCalenderData(data);
-    props.onChange({ target: target, data });
+    onChange({ target: target, data });
   }
+
+  const onTap = () => {};
+
+  /**
+   * @zh 拖拽样式
+   */
+  const OperateTime = forwardRef<
+    HTMLDivElement,
+    { layout: Rect; children?: ComponentChildren; type: OperateType }
+  >(({ layout, children, type }, ref) => {
+    return (
+      <div
+        className={cls(['operate-placelholder', `operate-placelholder-${type ?? 'normal'}`])}
+        style={genStyles(layout)}
+        ref={ref}
+      >
+        {children}
+      </div>
+    );
+  });
 
   /**
    * @zh 添加时间段
@@ -220,7 +214,7 @@ function DayView(props: DayViewProps) {
    * 自动平均对齐刻度
    */
 
-  let scrollTop = useRef(0);
+  let scrollTop = useRef(0); // 还需要加上window的scroll事件
   usePointerMoveEvent(layoutContainer, {
     onDown({ y }) {
       let containerRect = getRect();
@@ -234,9 +228,14 @@ function DayView(props: DayViewProps) {
         },
         data: {
           title: '添加日程',
-          start: getReturnTime(props.date[0].time.add(offsetToTimeValue(top), 'second')),
+          start: getReturnTime(
+            date[0].time.add(offsetToTimeValue(top, timeInterval, cellHeight), 'second')
+          ),
           end: getReturnTime(
-            props.date[0].time.add(offsetToTimeValue(top + dragStepNum), 'second')
+            date[0].time.add(
+              offsetToTimeValue(top + dragStepNum, timeInterval, cellHeight),
+              'second'
+            )
           ),
           _key: createUniqueId(),
           type: 'time',
@@ -259,8 +258,12 @@ function DayView(props: DayViewProps) {
             rect,
             data: {
               title: newConfig.data.title,
-              start: getReturnTime(props.date[0].time.add(offsetToTimeValue(rect.y), 'second')),
-              end: getReturnTime(props.date[0].time.add(offsetToTimeValue(rect.y + h), 'second')),
+              start: getReturnTime(
+                date[0].time.add(offsetToTimeValue(rect.y, timeInterval, cellHeight), 'second')
+              ),
+              end: getReturnTime(
+                date[0].time.add(offsetToTimeValue(rect.y + h, timeInterval, cellHeight), 'second')
+              ),
               _key: createUniqueId(),
               type: 'time',
             },
@@ -278,41 +281,24 @@ function DayView(props: DayViewProps) {
       setDragConf(null);
     },
   });
-  /**
-   * @zh 点击某个日程
-   */
-  function onTap() {}
-
-  /**
-   * @zh 拖拽样式
-   */
-  const OperateTime = forwardRef<
-    HTMLDivElement,
-    { layout: Rect; children?: ComponentChildren; type: OperateType }
-  >(({ layout, children, type }, ref) => {
-    return (
-      <div
-        className={cls(['operate-placelholder', `operate-placelholder-${type ?? 'normal'}`])}
-        style={genStyles(layout)}
-        ref={ref}
-      >
-        {children}
-      </div>
-    );
-  });
 
   function renderCalenderLayout() {
-    if (isEmpty(renderData)) {
+    if (isEmpty(layoutData)) {
       return null;
     }
-    return renderData.map((group) =>
+    return layoutData.map((group) =>
       group.data.map(({ colIndex, ...config }) => (
-        <EventComponent
-          {...calculateRect({ ...config, colIndex }, group.totalColumn, colH, containerRect.width)}
+        <EventLayoutItem
+          {...calculateRect(
+            { ...config, colIndex },
+            group.totalColumn,
+            cellHeight,
+            containerRect.width
+          )}
           key={config._key}
           data={config}
-          cellHeight={colH}
-          interval={interval}
+          cellHeight={cellHeight}
+          interval={timeInterval}
           onMoveStart={onMoveStart}
           onMove={onMove}
           onMoveEnd={onMoveEnd}
@@ -326,11 +312,10 @@ function DayView(props: DayViewProps) {
           <div
             style={{ width: '100%', height: '100%', background: 'blue' }}
           >{`${config.title}-${format(config.start, 'HH:mm')}~${format(config.end, 'HH:mm')}`}</div>
-        </EventComponent>
+        </EventLayoutItem>
       ))
     );
   }
-
   function renderPlaceholder() {
     if (dragConfig) {
       return (
@@ -346,26 +331,13 @@ function DayView(props: DayViewProps) {
   }
 
   return (
-    <div className={cls('day')}>
-      <Header data={todayData} />
-      <Scrollbar
-        hideBar
-        className={cls('grid-scrollbar')}
-        onScroll={({ scroll }) => {
-          scrollTop.current = scroll.scrollTop;
-        }}
-      >
-        <div className={cls('day-grid')} style={{ '--col-h': colH + 'px' }}>
-          <TimeLine data={timeList} />
-          <div className={cls('day-grid-layout')} ref={layoutContainer}>
-            {renderCalenderLayout()}
-            <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
-            {renderPlaceholder()}
-          </div>
-        </div>
-      </Scrollbar>
+    <div
+      style={{ '--col-h': cellHeight + 'px', width: '100%', height: numToPx(columnHeight) }}
+      class={cls('column')}
+      ref={layoutContainer}
+    >
+      {renderCalenderLayout()}
+      {renderPlaceholder()}
     </div>
   );
 }
-
-export default DayView;

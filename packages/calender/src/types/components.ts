@@ -29,7 +29,7 @@ export interface GridBoxProps extends Rect {
   className?: string;
   children?: ComponentChildren;
   data: CalenderItem;
-  colH?: number;
+  cellHeight?: number;
   interval?: number;
   onMoveStart?(event: any, data: CalenderItem, rect: Rect): void;
   onMove?(event: any, data: CalenderItem, rect: Rect): void;

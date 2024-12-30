@@ -9,13 +9,28 @@
 </head>
 
 <body>
-    <div id="root"></div>
+    <div id="root" class="container">
+        <div class="calender" id="calender-container"></div>
+        <div class="calender-column" id="calender-column"></div>
+    </div>
 </body>
 
 </html>
 <style>
-    #root {
+    .container {
+        display: flex;
+    }
+
+    .calender {
         width: 900px;
         height: 700px;
+        margin-bottom: 32px;
+
+    }
+
+    .calender-column {
+        width: 900px;
+        height: 2px;
+        min-height: 700px;
     }
 </style>

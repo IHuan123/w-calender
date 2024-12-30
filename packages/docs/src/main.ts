@@ -66,8 +66,8 @@ function main() {
     viewType: 'D',
   };
 
-  let context = new ChCalender(document.getElementById('root')!, options);
-
+  let context = new ChCalender(document.getElementById('calender-container')!, options);
+  context.testRender();
   // 渲染数据
   function renderData() {}
 }
