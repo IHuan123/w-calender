@@ -34,7 +34,7 @@ export function judgType(val: any) {
 /**
  * @zh 判断对象是否是一个纯粹的对象
  */
-export function isObject(obj: any): obj is Object | Array<any> {
+export function isObject(obj: any): obj is object {
   return judgType(obj) === 'object';
 }
 
