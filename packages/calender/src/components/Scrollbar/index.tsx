@@ -4,7 +4,7 @@ import { useCallback } from 'preact/hooks';
 import './index.scss';
 
 export interface ScrollbarProps {
-  children: ComponentChildren;
+  children?: ComponentChildren;
   className?: string;
   style?: h.JSX.CSSProperties;
   hideBar?: Boolean;

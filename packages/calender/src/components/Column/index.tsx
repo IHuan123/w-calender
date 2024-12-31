@@ -22,14 +22,17 @@ import useColumnLayout from './hooks/useColumnLayout';
 import { useElementBounding, useXState, usePointerMoveEvent, useScroll } from '@/hooks';
 
 import EventLayoutItem from '@/components/Event/EventLayoutItem';
+
 import { defaultWindow } from '@/constant/_configurable';
 
 export interface ColumnProps {
   data: CalenderItem[];
   date: DateRange;
+  scrollTop?: number;
   cellHeight?: number;
   timeInterval?: number;
   gap?: number;
+  bordered?: boolean;
   onMoveStart?(event: any, data: CalenderItem, rect: Rect): void;
   onMove?(event: any, data: CalenderItem, rect: Rect): void;
   onMoveEnd?(event: any, data: CalenderItem, rect: Rect): void;
@@ -48,6 +51,8 @@ export default function Column({
   cellHeight = 42,
   timeInterval = 30,
   gap = 0,
+  scrollTop = 0,
+  bordered = true,
   onChange = () => {},
 }: ColumnProps) {
   const layoutContainer = useRef<HTMLDivElement>(null);
@@ -60,6 +65,7 @@ export default function Column({
   const { todayData, layoutData, setCalenderData, getCalenderData } = useColumnLayout({
     data: data,
   });
+  const [containerScrollTop, setScrollTop, getScrollTop] = useXState(scrollTop);
 
   const dragStepNum = useMemo(() => {
     return (cellHeight / timeInterval) * 15;
@@ -215,7 +221,6 @@ export default function Column({
    * 自动平均对齐刻度
    */
 
-  let scrollTop = useRef(0); // 还需要加上window的scroll事件
   let windowScrollTop = useRef(0);
   useScroll(defaultWindow, {
     onScroll(e, { y }) {
@@ -225,7 +230,8 @@ export default function Column({
   usePointerMoveEvent(layoutContainer, {
     onDown({ y }) {
       let containerRect = getRect();
-      let top = y - containerRect.top + scrollTop.current + windowScrollTop.current;
+
+      let top = y - containerRect.top + getScrollTop() + windowScrollTop.current;
       console.log(
         top,
         date[0].time
@@ -346,10 +352,13 @@ export default function Column({
   useEffect(() => {
     windowScrollTop.current = defaultWindow?.scrollY ?? 0;
   }, []);
+  useEffect(() => {
+    setScrollTop(scrollTop);
+  }, [scrollTop]);
   return (
     <div
       style={{ '--col-h': cellHeight + 'px', width: '100%', height: numToPx(columnHeight) }}
-      class={cls('column')}
+      class={cls(['column', bordered ? 'column-border' : void 0])}
       ref={layoutContainer}
     >
       {renderCalenderLayout()}
