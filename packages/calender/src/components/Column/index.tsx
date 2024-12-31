@@ -1,6 +1,6 @@
 import './style/index.scss';
 import { ComponentChildren } from 'preact';
-import { useMemo, useRef, forwardRef } from 'preact/compat';
+import { useMemo, useRef, forwardRef, useEffect } from 'preact/compat';
 import {
   createUniqueId,
   getMoveDistance,
@@ -19,9 +19,10 @@ import type { DateRange } from '@/types/schedule';
 import type { Rect, OperateType } from '@/types/components';
 import type { TimeValue, ReturnTimeValue, TimeList } from '@wcalender/types/time';
 import useColumnLayout from './hooks/useColumnLayout';
-import { useElementBounding, useXState, usePointerMoveEvent } from '@/hooks';
+import { useElementBounding, useXState, usePointerMoveEvent, useScroll } from '@/hooks';
 
 import EventLayoutItem from '@/components/Event/EventLayoutItem';
+import { defaultWindow } from '@/constant/_configurable';
 
 export interface ColumnProps {
   data: CalenderItem[];
@@ -215,10 +216,22 @@ export default function Column({
    */
 
   let scrollTop = useRef(0); // 还需要加上window的scroll事件
+  let windowScrollTop = useRef(0);
+  useScroll(defaultWindow, {
+    onScroll(e, { y }) {
+      windowScrollTop.current = y;
+    },
+  });
   usePointerMoveEvent(layoutContainer, {
     onDown({ y }) {
       let containerRect = getRect();
-      let top = y - containerRect.top + scrollTop.current;
+      let top = y - containerRect.top + scrollTop.current + windowScrollTop.current;
+      console.log(
+        top,
+        date[0].time
+          .add(offsetToTimeValue(top, timeInterval, cellHeight), 'second')
+          .format('YYYY-MM-DD HH:mm')
+      );
       setDragConf({
         rect: {
           x: 0,
@@ -330,6 +343,9 @@ export default function Column({
     return null;
   }
 
+  useEffect(() => {
+    windowScrollTop.current = defaultWindow?.scrollY ?? 0;
+  }, []);
   return (
     <div
       style={{ '--col-h': cellHeight + 'px', width: '100%', height: numToPx(columnHeight) }}

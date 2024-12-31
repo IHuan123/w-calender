@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useMemo, useRef } from 'preact/compat';
+import { useEffect, useMemo, useRef } from 'preact/compat';
 import { defaultWindow } from '@/constant/_configurable';
 import { unref } from '@/utils/common';
 import type { ConfigurableWindow } from '@/types/configurable';
@@ -38,7 +38,7 @@ export interface UseScrollOptions extends ConfigurableWindow {
    * Trigger it when scrolling.
    *
    */
-  onScroll?: (e: Event) => void;
+  onScroll?: (e: Event, offset: { x: number; y: number }) => void;
 
   /**
    * Trigger it when scrolling ends.
@@ -70,12 +70,10 @@ export interface UseScrollOptions extends ConfigurableWindow {
 }
 
 export default function useScroll(
-  element: RefObject<HTMLElement | SVGElement | Window | Document | null | undefined>,
+  element: RefType<HTMLElement | SVGElement | Window | Document | null | undefined>,
   options: UseScrollOptions
 ) {
   const {
-    onStop = () => {},
-    onScroll = () => {},
     offset = {
       left: 0,
       right: 0,
@@ -88,6 +86,8 @@ export default function useScroll(
     },
     behavior = 'auto',
     window = defaultWindow,
+    onStop = () => {},
+    onScroll = () => {},
     onError = (e) => {
       console.error(e);
     },
@@ -125,6 +125,7 @@ export default function useScroll(
       left: unref(_x) ?? getInternalY(),
       behavior: behavior,
     });
+
     const scrollContainer =
       (_element as Window)?.document?.documentElement ||
       (_element as Document)?.documentElement ||
@@ -212,7 +213,10 @@ export default function useScroll(
 
     isScrolling.current = true;
     onScrollEnd(e);
-    onScroll(e);
+    onScroll(e, {
+      x: getInternalX(),
+      y: getInternalY(),
+    });
   };
 
   useEffect(() => {
@@ -227,4 +231,24 @@ export default function useScroll(
 
   useEventListener(element, 'scroll', onScrollHandler, eventListenerOptions);
   useEventListener(element, 'scrollend', onScrollEnd, eventListenerOptions);
+
+  return {
+    x,
+    y,
+    isScrolling,
+    arrivedState,
+    directions,
+    measure() {
+      const _element = unref(element);
+
+      if (window && _element) setArrivedState(_element);
+    },
+    scrollTo,
+    getScrollXY() {
+      return {
+        x: getInternalX(),
+        y: getInternalY(),
+      };
+    },
+  };
 }
