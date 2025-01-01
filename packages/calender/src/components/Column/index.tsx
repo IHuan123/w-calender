@@ -17,7 +17,6 @@ import { genTimeSlice, calculateRect, offsetToTimeValue, genStyles } from '../_u
 import type { CalenderItem } from '@/types/options';
 import type { DateRange } from '@/types/schedule';
 import type { Rect, OperateType } from '@/types/components';
-import type { TimeValue, ReturnTimeValue, TimeList } from '@wcalender/types/time';
 import useColumnLayout from './hooks/useColumnLayout';
 import { useElementBounding, useXState, usePointerMoveEvent, useScroll } from '@/hooks';
 
@@ -62,10 +61,10 @@ export default function Column({
   const [dragConfig, setDragConf, getDragState] = useXState<DragConfig>(null);
   const { rect: containerRect, getRect } = useElementBounding(layoutContainer);
   // 这里的数据需统一使用store存储
-  const { todayData, layoutData, setCalenderData, getCalenderData } = useColumnLayout({
+  const { layoutData, setCalenderData, getCalenderData } = useColumnLayout({
     data: data,
   });
-  const [containerScrollTop, setScrollTop, getScrollTop] = useXState(scrollTop);
+  const [, setScrollTop, getScrollTop] = useXState(scrollTop);
 
   const dragStepNum = useMemo(() => {
     return (cellHeight / timeInterval) * 15;
