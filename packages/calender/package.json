@@ -36,7 +36,10 @@
     "dev": "w-calender-cli calender-server",
     "build": "w-calender-cli calender-build",
     "build:types": "tsc -p ./tsconfig.declaration.json",
-    "test": "jest"
+    "test": "jest --config ./jest.config.ts"
+  },
+  "jest": {
+    "preset": "vite-jest"
   },
   "keywords": [
     "calender",
@@ -54,9 +57,11 @@
     "@babel/plugin-transform-react-jsx": "^7.25.2",
     "@babel/preset-env": "^7.25.4",
     "@interactjs/types": "^1.10.27",
+    "@testing-library/react": "^16.1.0",
     "@types/jest": "^29.5.14",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "ts-jest": "^29.2.5"
+    "ts-jest": "^29.2.5",
+    "vite-jest": "^0.1.4"
   }
 }
