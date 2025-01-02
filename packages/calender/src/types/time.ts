@@ -1,6 +1,6 @@
 import { Dayjs } from 'dayjs';
 
-export type TimeValue = Dayjs | string;
+export type TimeValue = ReturnTimeValue | Dayjs | string | Date;
 
 export type ReturnTimeValue = {
   year: number;
@@ -13,6 +13,7 @@ export type ReturnTimeValue = {
   minute: number;
   second: number;
   afternoon: boolean;
+  [key: symbol]: boolean;
 };
 
 export type TimeList = Array<{

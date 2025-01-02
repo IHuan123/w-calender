@@ -39,6 +39,7 @@ export interface GridBoxProps extends Rect {
   onResize?(event: any, data: CalenderItem, rect: Rect): void;
   onResizeEnd?(event: any, data: CalenderItem, rect: Rect): void;
   onTap?(event: any, data: CalenderItem, rect: Rect): void;
+  onBeforeUpdate?(): Promise<boolean> | boolean;
 }
 
 export type OperateType = 'resize' | 'move' | 'add';

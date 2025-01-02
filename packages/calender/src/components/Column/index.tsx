@@ -12,6 +12,8 @@ import {
   cls,
   isEmpty,
   isUndef,
+  isFunction,
+  isAsyncFunction,
 } from '@/utils';
 import { genTimeSlice, calculateRect, offsetToTimeValue, genStyles } from '../_utils';
 import type { CalenderItem } from '@/types/options';
@@ -38,6 +40,10 @@ export interface ColumnProps {
   onResize?(event: any, data: CalenderItem, rect: Rect): void;
   onResizeEnd?(event: any, data: CalenderItem, rect: Rect): void;
   onTap?(event: any, data: CalenderItem, rect: Rect): void;
+  onBeforeUpdate?: (value?: {
+    target: CalenderItem;
+    data: CalenderItem[];
+  }) => boolean | Promise<boolean>;
   onChange?(event: { target: CalenderItem; data: CalenderItem[] }): void;
 }
 
@@ -52,6 +58,7 @@ export default function Column({
   bordered = true,
   split = true,
   onChange = () => {},
+  onBeforeUpdate = () => false,
 }: ColumnProps) {
   const layoutContainer = useRef<HTMLDivElement>(null);
   const timeList = useMemo(() => genTimeSlice(date, timeInterval), [date]);
@@ -63,6 +70,7 @@ export default function Column({
   // 这里的数据需统一使用store存储
   const { layoutData, setCalenderData, getCalenderData } = useColumnLayout({
     data: data,
+    timeRange: date,
   });
 
   const dragStepNum = useMemo(() => {
@@ -119,7 +127,6 @@ export default function Column({
   function onMoveEnd(event: any, data: CalenderItem) {
     let dragData = getDragState();
     changeData(dragData?.data as CalenderItem);
-    setDragConf(null);
   }
   /**
    * @zh resize start
@@ -146,7 +153,6 @@ export default function Column({
   function onResizeEnd(event: any, data: CalenderItem) {
     let dragData = getDragState();
     changeData(dragData?.data as CalenderItem);
-    setDragConf(null);
   }
 
   /**
@@ -155,10 +161,13 @@ export default function Column({
   function handleUpdateData(event: any, data: CalenderItem, type: OperateType) {
     let dragData = { ...data };
     dragData.start = getReturnTime(
-      date[0].time.add(offsetToTimeValue(dragPosition.y, timeInterval, cellHeight), 'second')
+      getReturnTime(date[0]).time.add(
+        offsetToTimeValue(dragPosition.y, timeInterval, cellHeight),
+        'second'
+      )
     );
     dragData.end = getReturnTime(
-      date[0].time.add(
+      getReturnTime(date[0]).time.add(
         offsetToTimeValue(dragPosition.y + event.rect.height, timeInterval, cellHeight),
         'second'
       )
@@ -174,13 +183,14 @@ export default function Column({
    * @zh 数据更新事件
    */
   async function changeData(data: CalenderItem) {
-    updateData(data);
+    await updateData(data);
+    setDragConf(null);
   }
 
   /**
    * @zh 更新数据
    */
-  function updateData(target: CalenderItem) {
+  async function updateData(target: CalenderItem) {
     let data = [...getCalenderData()];
     let index = data.findIndex((item) => item._key === target._key);
     if (index > -1) {
@@ -188,9 +198,15 @@ export default function Column({
     } else {
       data = [...data, target];
     }
-
-    setCalenderData(data);
-    onChange({ target: target, data });
+    let result = { target: target, data };
+    let isAllow =
+      isAsyncFunction(onBeforeUpdate) || isFunction(onBeforeUpdate)
+        ? await onBeforeUpdate({ target: target, data })
+        : false;
+    if (isAllow) {
+      setCalenderData(data);
+      onChange(result);
+    }
   }
 
   const onTap = () => {};
@@ -225,14 +241,12 @@ export default function Column({
   /**
    * @zh 鼠标移动事件处理
    */
-  let startOffsetY = 0;
   let originalLayoutConfig: Rect;
   usePointerMoveEvent(layoutContainer, {
     onDown({ event }) {
       let { offsetY } = event.originalEvent;
-
       let top = getMoveEvtDownY(offsetY);
-      startOffsetY = top;
+
       let rect = {
         x: 0,
         y: top,
@@ -245,10 +259,13 @@ export default function Column({
         data: {
           title: '添加日程',
           start: getReturnTime(
-            date[0].time.add(offsetToTimeValue(top, timeInterval, cellHeight), 'second')
+            getReturnTime(date[0]).time.add(
+              offsetToTimeValue(top, timeInterval, cellHeight),
+              'second'
+            )
           ),
           end: getReturnTime(
-            date[0].time.add(
+            getReturnTime(date[0]).time.add(
               offsetToTimeValue(top + dragStepNum, timeInterval, cellHeight),
               'second'
             )
@@ -283,10 +300,16 @@ export default function Column({
           };
           let [start, end] = [
             getReturnTime(
-              date[0].time.add(offsetToTimeValue(rect.y, timeInterval, cellHeight), 'second')
+              getReturnTime(date[0]).time.add(
+                offsetToTimeValue(rect.y, timeInterval, cellHeight),
+                'second'
+              )
             ),
             getReturnTime(
-              date[0].time.add(offsetToTimeValue(rect.y + h, timeInterval, cellHeight), 'second')
+              getReturnTime(date[0]).time.add(
+                offsetToTimeValue(rect.y + h, timeInterval, cellHeight),
+                'second'
+              )
             ),
           ].sort((a, b) => {
             return a.time.isAfter(b.time) ? 1 : -1;
@@ -308,9 +331,8 @@ export default function Column({
     onUp() {
       let newConfig = getDragState();
       if (newConfig) {
-        updateData(newConfig.data);
+        changeData(newConfig.data);
       }
-      setDragConf(null);
     },
   });
 

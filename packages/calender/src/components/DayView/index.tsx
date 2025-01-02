@@ -1,17 +1,20 @@
 import './style/index.scss';
 import { useEffect, useRef, useMemo } from 'preact/compat';
-import { TimeList } from '@wcalender/types/time';
+import { TimeList } from '@/types/time';
 import Scrollbar from '../Scrollbar';
 import Header from './Header';
 import TimeLine from './TimeLine';
 import TimeIndicateLine from './TimeIndicateLine';
 import Column from '../Column';
-import { DayViewProps } from '@/types/components';
+
 import { useXState } from '@/hooks';
 import dayjs, { Dayjs } from 'dayjs';
 import { useStore } from '@/contexts/calenderStore';
-import { cls } from '@/utils';
+import { cls, isAsyncFunction, isFunction } from '@/utils';
 import { genTimeSlice } from '../_utils';
+import { isContainTimeRange } from '@/utils/time';
+import type { DayViewProps } from '@/types/components';
+import type { CalenderItem } from '@/types/options';
 
 const colH = 42;
 const interval = 30;
@@ -35,13 +38,28 @@ function DayView(props: DayViewProps) {
   const data = useRef(getState('data'));
   // 头部列表渲染
   const todayData = useMemo(() => {
-    return data.current?.filter((item: { type: string }) => item.type === 'day') ?? [];
+    return (
+      data.current?.filter(
+        (item: { end: string; start: string; type: string }) =>
+          !isContainTimeRange([item.start, item.end], props.date)
+      ) ?? []
+    );
   }, [data]);
 
   useEffect(() => {
-    let data = genTimeSlice(props.date, interval);
-    setTimeList(data);
+    setTimeList(genTimeSlice(props.date, interval));
   }, [props.date]);
+
+  // 数据更改
+  async function onChange(event: { target: CalenderItem; data: CalenderItem[] }) {
+    let allow = true;
+    if (isAsyncFunction(props.onBeforeUpdate) || isFunction(props.onBeforeUpdate)) {
+      allow = await props.onBeforeUpdate(event);
+    }
+    if (allow) {
+      props.onChange?.(event);
+    }
+  }
 
   return (
     <div className={cls('day')}>
@@ -50,7 +68,20 @@ function DayView(props: DayViewProps) {
         <div className={cls('day-grid')} style={{ '--col-h': colH + 'px' }}>
           <TimeLine data={timeList} />
           <div className={cls('day-grid-layout')} ref={layoutContainer}>
-            <Column data={data.current} date={props.date} cellHeight={42} bordered={false} />
+            <Column
+              data={data.current}
+              date={props.date}
+              cellHeight={42}
+              bordered={false}
+              onChange={onChange}
+              onBeforeUpdate={() => {
+                return new Promise((resolve) => {
+                  setTimeout(() => {
+                    resolve(true);
+                  }, 3000);
+                });
+              }}
+            />
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
           </div>
         </div>

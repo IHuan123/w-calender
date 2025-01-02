@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from 'preact/hooks';
 import dayjs from 'dayjs';
-import type { CalenderItem } from '@wcalender/types/options';
-import { isCrossoverTime } from '@/utils/time';
+import type { CalenderItem } from '@/types/options';
+import { isCrossoverTime, isContainTimeRange } from '@/utils/time';
 import { arrayGroupByValue } from '@/utils/common';
-import { isEmpty } from '@/utils/is';
+import { isEmpty, isUndef } from '@/utils/is';
 import { useXState } from '@/hooks';
+import { TimeValue } from '@wcalender/types/time';
 
 /**
  * @zh 布局配置
@@ -101,17 +102,23 @@ function handleGridCols(data: Array<CalenderItem>) {
   return groups;
 }
 
-export default function useColumnLayout({ data }: { data: CalenderItem[] }) {
+export default function useColumnLayout({
+  data,
+  timeRange,
+}: {
+  data: CalenderItem[];
+  // 限制在当前时间范围
+  timeRange?: [TimeValue, TimeValue];
+}) {
   const [calenderData, setData, getCalenderData] = useXState<Array<CalenderItem>>([]);
 
-  // 头部列表渲染
-  const todayData = useMemo(() => {
-    return calenderData?.filter((item) => item.type === 'day') ?? [];
-  }, [calenderData]);
-
-  // 列表布局中数据
+  // 列表布局中数据, 只渲染时间范围内的数据
   const layoutData = useMemo(() => {
-    return handleGridCols(calenderData?.filter((item) => item.type === 'time') ?? []);
+    let renderData = isUndef(timeRange)
+      ? calenderData
+      : (calenderData?.filter((item) => isContainTimeRange([item.start, item.end], timeRange)) ??
+        []);
+    return handleGridCols(renderData);
   }, [calenderData]);
 
   useEffect(() => {
@@ -119,7 +126,6 @@ export default function useColumnLayout({ data }: { data: CalenderItem[] }) {
   }, [data]);
 
   return {
-    todayData,
     layoutData,
     calenderData,
     setCalenderData: setData,

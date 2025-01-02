@@ -58,3 +58,24 @@ export function isRef<T>(val: any): val is RefObject<T> {
   }
   return 'current' in val;
 }
+
+/**
+ * @zh 判断是否为函数
+ */
+export function isFunction(val: any): val is Function {
+  return val instanceof Function;
+}
+
+/**
+ * @zh 判断是否为async函数
+ */
+export function isAsyncFunction(val: any): val is Function {
+  return judgType(val) === 'asyncfunction';
+}
+
+/**
+ * @zh 判断是否为Date
+ */
+export function isDate(val: any): val is Date {
+  return val instanceof Date;
+}

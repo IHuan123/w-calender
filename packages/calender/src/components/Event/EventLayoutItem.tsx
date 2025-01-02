@@ -1,11 +1,13 @@
 import { h } from 'preact';
-import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
+import { useEffect, useRef, useMemo } from 'preact/hooks';
 import { cls } from '@/utils/css';
 import { getAttrsTransformTranslate } from '@/utils/dom';
 import { getMoveDistance } from '@/utils/common';
 import type { GridBoxProps, OperateType } from '@wcalender/types/components';
 import useInteract, { InteractEventOptions } from '@/hooks/useInteract';
 import { genStyles } from '../_utils';
+import { useXState } from '@/hooks';
+import { isAsyncFunction, isFunction } from '@/utils';
 
 /**
  * @zh 获取拖动触发元素信息
@@ -34,10 +36,11 @@ export default function ScheduleCard({
   onResizeEnd,
   onTap,
   style,
+  onBeforeUpdate = () => true,
 }: GridBoxProps) {
   const gridBox = useRef<HTMLDivElement>(null);
-  const [editType, setDragState] = useState<OperateType | false>(false);
-  const [styleConfig, setStyleConfig] = useState<h.JSX.CSSProperties | null>(null);
+  const [editType, setDragState] = useXState<OperateType | false>(false);
+  const [styleConfig, setStyleConfig] = useXState<h.JSX.CSSProperties | null>(null);
 
   const dragStepNum = useMemo(() => {
     return (cellHeight / interval) * 15;
@@ -46,6 +49,19 @@ export default function ScheduleCard({
   useEffect(() => {
     setStyleConfig(() => genStyles({ x, y, h: h, w: w }));
   }, [w, h, x, y]);
+
+  /**
+   * 重置状态
+   */
+  async function resetEditType() {
+    let isAllow =
+      isAsyncFunction(onBeforeUpdate) || isFunction(onBeforeUpdate)
+        ? await onBeforeUpdate()
+        : false;
+    if (isAllow) {
+      setDragState(false);
+    }
+  }
 
   const options: InteractEventOptions = {
     draggableEvents: {
@@ -66,7 +82,7 @@ export default function ScheduleCard({
         end(event) {
           let rect = getEleLayout(event.target);
           onMoveEnd?.(event, data, rect);
-          setDragState(false);
+          resetEditType();
         },
       },
     },
@@ -88,7 +104,7 @@ export default function ScheduleCard({
         end(event) {
           let rect = getEleLayout(event.target);
           onResizeEnd?.(event, data, rect);
-          setDragState(false);
+          resetEditType();
         },
       },
     },
