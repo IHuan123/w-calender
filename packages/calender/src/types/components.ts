@@ -1,7 +1,7 @@
 import type { DateRange } from './schedule';
 import type { CalenderItem } from '@/types/options';
 import type { EventsProps } from './events';
-import { ComponentChildren } from 'preact';
+import { ComponentChildren, h } from 'preact';
 export interface DayViewProps extends EventsProps {
   data: CalenderItem[];
   date: DateRange;
@@ -31,6 +31,7 @@ export interface GridBoxProps extends Rect {
   data: CalenderItem;
   cellHeight?: number;
   interval?: number;
+  style?: h.JSX.CSSProperties;
   onMoveStart?(event: any, data: CalenderItem, rect: Rect): void;
   onMove?(event: any, data: CalenderItem, rect: Rect): void;
   onMoveEnd?(event: any, data: CalenderItem, rect: Rect): void;

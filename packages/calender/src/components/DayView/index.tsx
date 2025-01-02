@@ -43,34 +43,14 @@ function DayView(props: DayViewProps) {
     setTimeList(data);
   }, [props.date]);
 
-  /**
-   * @zh 添加时间段
-   * 这里需要做添加元素的resize操作
-   * 自动平均对齐刻度
-   */
-
-  let [scrollTop, setScrollTop] = useXState(0);
-
   return (
     <div className={cls('day')}>
       <Header data={todayData} />
-      <Scrollbar
-        hideBar
-        className={cls('grid-scrollbar')}
-        onScroll={({ scroll }) => {
-          setScrollTop(scroll.scrollTop);
-        }}
-      >
+      <Scrollbar hideBar className={cls('grid-scrollbar')}>
         <div className={cls('day-grid')} style={{ '--col-h': colH + 'px' }}>
           <TimeLine data={timeList} />
           <div className={cls('day-grid-layout')} ref={layoutContainer}>
-            <Column
-              scrollTop={scrollTop}
-              data={data.current}
-              date={props.date}
-              cellHeight={42}
-              bordered={false}
-            />
+            <Column data={data.current} date={props.date} cellHeight={42} bordered={false} />
             <TimeIndicateLine top={calculateDistance(dayjs().startOf('day'), dayjs(), colH)} />
           </div>
         </div>

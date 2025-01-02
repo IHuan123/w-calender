@@ -18,15 +18,7 @@ $border: 1px solid $color-border-2;
     &-layout {
       width: 100%;
       position: relative;
-      background: linear-gradient(
-          to bottom,
-          $color-border-2 0px,
-          $color-border-2 1px,
-          #fff 1px,
-          #fff 100%
-        )
-        repeat-y;
-      background-size: 100% $col-height;
+
       &-col {
         height: $col-height;
         border-bottom: $border;

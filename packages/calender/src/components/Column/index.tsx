@@ -1,6 +1,6 @@
 import './style/index.scss';
 import { ComponentChildren } from 'preact';
-import { useMemo, useRef, forwardRef, useEffect } from 'preact/compat';
+import { useMemo, useRef, forwardRef } from 'preact/compat';
 import {
   createUniqueId,
   getMoveDistance,
@@ -18,11 +18,9 @@ import type { CalenderItem } from '@/types/options';
 import type { DateRange } from '@/types/schedule';
 import type { Rect, OperateType } from '@/types/components';
 import useColumnLayout from './hooks/useColumnLayout';
-import { useElementBounding, useXState, usePointerMoveEvent, useScroll } from '@/hooks';
+import { useElementBounding, useXState, usePointerMoveEvent } from '@/hooks';
 
 import EventLayoutItem from '@/components/Event/EventLayoutItem';
-
-import { defaultWindow } from '@/constant/_configurable';
 
 export interface ColumnProps {
   data: CalenderItem[];
@@ -32,6 +30,7 @@ export interface ColumnProps {
   timeInterval?: number;
   gap?: number;
   bordered?: boolean;
+  split?: boolean;
   onMoveStart?(event: any, data: CalenderItem, rect: Rect): void;
   onMove?(event: any, data: CalenderItem, rect: Rect): void;
   onMoveEnd?(event: any, data: CalenderItem, rect: Rect): void;
@@ -50,13 +49,14 @@ export default function Column({
   cellHeight = 42,
   timeInterval = 30,
   gap = 0,
-  scrollTop = 0,
   bordered = true,
+  split = true,
   onChange = () => {},
 }: ColumnProps) {
   const layoutContainer = useRef<HTMLDivElement>(null);
   const timeList = useMemo(() => genTimeSlice(date, timeInterval), [date]);
   const columnHeight = useMemo(() => timeList.length * cellHeight, [timeList]);
+
   let dragPosition: Rect = { x: 0, y: 0, w: '100%', h: 0 };
   const [dragConfig, setDragConf, getDragState] = useXState<DragConfig>(null);
   const { rect: containerRect, getRect } = useElementBounding(layoutContainer);
@@ -64,7 +64,6 @@ export default function Column({
   const { layoutData, setCalenderData, getCalenderData } = useColumnLayout({
     data: data,
   });
-  const [, setScrollTop, getScrollTop] = useXState(scrollTop);
 
   const dragStepNum = useMemo(() => {
     return (cellHeight / timeInterval) * 15;
@@ -219,25 +218,30 @@ export default function Column({
    * 这里需要做添加元素的resize操作
    * 自动平均对齐刻度
    */
+  function getMoveEvtDownY(y: number) {
+    return y - (y % (cellHeight / 2));
+  }
 
-  let windowScrollTop = useRef(0);
-  useScroll(defaultWindow, {
-    onScroll(e, { y }) {
-      windowScrollTop.current = y;
-    },
-  });
+  /**
+   * @zh 鼠标移动事件处理
+   */
+  let startOffsetY = 0;
+  let originalLayoutConfig: Rect;
   usePointerMoveEvent(layoutContainer, {
     onDown({ event }) {
       let { offsetY } = event.originalEvent;
 
-      let top = offsetY;
+      let top = getMoveEvtDownY(offsetY);
+      startOffsetY = top;
+      let rect = {
+        x: 0,
+        y: top,
+        w: '100%',
+        h: dragStepNum,
+      };
+      originalLayoutConfig = rect;
       setDragConf({
-        rect: {
-          x: 0,
-          y: top,
-          w: '100%',
-          h: dragStepNum,
-        },
+        rect,
         data: {
           title: '添加日程',
           start: getReturnTime(
@@ -257,25 +261,42 @@ export default function Column({
     },
     onMove({ dy }) {
       let newConfig = getDragState();
+
       if (newConfig) {
         let distanceY = getDy(dy, dragStepNum);
         if (distanceY) {
-          let h = newConfig.rect.h + distanceY;
+          originalLayoutConfig.h = originalLayoutConfig.h + distanceY;
+          let h = Math.abs(originalLayoutConfig.h);
+          let y = 0;
+          if (originalLayoutConfig.h > 0) {
+            y = newConfig.rect.y;
+          } else if (originalLayoutConfig.h < -dragStepNum) {
+            y = originalLayoutConfig.y - h;
+          } else {
+            y = originalLayoutConfig.y - dragStepNum;
+            h = dragStepNum;
+          }
           let rect = {
             ...newConfig.rect,
-            h: h,
+            y: y,
+            h,
           };
-
+          let [start, end] = [
+            getReturnTime(
+              date[0].time.add(offsetToTimeValue(rect.y, timeInterval, cellHeight), 'second')
+            ),
+            getReturnTime(
+              date[0].time.add(offsetToTimeValue(rect.y + h, timeInterval, cellHeight), 'second')
+            ),
+          ].sort((a, b) => {
+            return a.time.isAfter(b.time) ? 1 : -1;
+          });
           setDragConf({
             rect,
             data: {
               title: newConfig.data.title,
-              start: getReturnTime(
-                date[0].time.add(offsetToTimeValue(rect.y, timeInterval, cellHeight), 'second')
-              ),
-              end: getReturnTime(
-                date[0].time.add(offsetToTimeValue(rect.y + h, timeInterval, cellHeight), 'second')
-              ),
+              start,
+              end,
               _key: createUniqueId(),
               type: 'time',
             },
@@ -289,7 +310,6 @@ export default function Column({
       if (newConfig) {
         updateData(newConfig.data);
       }
-
       setDragConf(null);
     },
   });
@@ -318,6 +338,7 @@ export default function Column({
           onResizeEnd={onResizeEnd}
           onResize={onResize}
           onTap={onTap}
+          style={{ pointerEvents: isEmpty(dragConfig) ? 'auto' : 'none' }}
         >
           {/* 自定义日程卡片，需支持自定义 */}
 
@@ -342,13 +363,10 @@ export default function Column({
     return null;
   }
 
-  useEffect(() => {
-    setScrollTop(scrollTop);
-  }, [scrollTop]);
   return (
     <div
       style={{ '--col-h': cellHeight + 'px', width: '100%', height: numToPx(columnHeight) }}
-      class={cls(['column', bordered ? 'column-border' : void 0])}
+      class={cls(['column', bordered ? 'column-border' : void 0, split ? 'column-split' : void 0])}
       ref={layoutContainer}
     >
       {renderCalenderLayout()}

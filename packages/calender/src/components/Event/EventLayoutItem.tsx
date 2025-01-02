@@ -33,6 +33,7 @@ export default function ScheduleCard({
   onResizeStart,
   onResizeEnd,
   onTap,
+  style,
 }: GridBoxProps) {
   const gridBox = useRef<HTMLDivElement>(null);
   const [editType, setDragState] = useState<OperateType | false>(false);
@@ -105,6 +106,7 @@ export default function ScheduleCard({
       className={`${className ?? ''} ${cls(['grid-box', 'grid-content'])}`}
       style={{
         ...styleConfig,
+        ...style,
         opacity: editType ? { resize: 0, move: 0.7, add: 0 }[editType as OperateType] : 1,
       }}
       ref={gridBox}

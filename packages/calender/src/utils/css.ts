@@ -1,3 +1,5 @@
+import { isUndef } from './is';
+
 export const CSS_PREFIX = 'w-calender';
 
 /**
@@ -17,7 +19,7 @@ export function cls(classNames: string | Array<string | undefined>) {
     return getCls(classNames);
   }
   return classNames.reduce((prev, cur, index) => {
-    if (cur === undefined) {
+    if (isUndef(cur)) {
       return prev;
     }
     let className = getCls(cur);
