@@ -227,16 +227,10 @@ export default function Column({
     },
   });
   usePointerMoveEvent(layoutContainer, {
-    onDown({ y }) {
-      let containerRect = getRect();
+    onDown({ event }) {
+      let { offsetY } = event.originalEvent;
 
-      let top = y - containerRect.top + getScrollTop() + windowScrollTop.current;
-      console.log(
-        top,
-        date[0].time
-          .add(offsetToTimeValue(top, timeInterval, cellHeight), 'second')
-          .format('YYYY-MM-DD HH:mm')
-      );
+      let top = offsetY;
       setDragConf({
         rect: {
           x: 0,
@@ -348,9 +342,6 @@ export default function Column({
     return null;
   }
 
-  useEffect(() => {
-    windowScrollTop.current = defaultWindow?.scrollY ?? 0;
-  }, []);
   useEffect(() => {
     setScrollTop(scrollTop);
   }, [scrollTop]);
