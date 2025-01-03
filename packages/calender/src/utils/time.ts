@@ -1,6 +1,6 @@
 import dayjs, { UnitType } from 'dayjs';
 import type { TimeValue, ReturnTimeValue, TimeList } from '@wcalender/types/time';
-import { isDate } from '@/utils/is';
+import { isDate } from './is';
 
 import quarterOfYear from 'dayjs/plugin/quarterOfYear';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';

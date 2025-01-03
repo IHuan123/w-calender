@@ -1,4 +1,4 @@
-import bus from '@/utils/bus';
+import { expect, test } from 'vitest';
 
 test('测试bus', () => {
   expect(3).toBe(3);
